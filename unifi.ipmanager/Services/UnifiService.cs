@@ -20,6 +20,7 @@ namespace unifi.ipmanager.Services
 {
     public class UnifiService : IUnifiService
     {
+        private const string SiteId = "at7as3rk";
 
         private UnifiControllerOptions UnifiOptions { get; }
         private ILogger Logger { get; }
@@ -39,15 +40,27 @@ namespace unifi.ipmanager.Services
         {
             await VerifyLogin();
 
-            var data = await UnifiOptions.Url.AppendPathSegments("api", "s", "at7as3rk", "stat", "alluser")
+            var allClients = new List<UniClient>();
+
+            var data = await UnifiOptions.Url.AppendPathSegments("api", "s", SiteId, "stat", "alluser")
                 .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
 
             if (data.Meta.Rc == UniMeta.ErrorResponse)
             {
                 Logger.LogError($"Error retrieving clients from {UnifiOptions.Url}: {data.Meta.Msg}");
             }
+            else
+            {
+                allClients.AddRange(data.Data.Where(uc => uc.Use_fixedip));
+            }
 
-            return data.Data.Where(uc => uc.Use_fixedip).ToList();
+            var devices = await GetDevicesAsUniClient();
+            if (devices != null && devices.Any())
+            {
+                allClients.AddRange(devices);
+            }
+
+            return allClients;
         }
 
         public async Task<UniClient> ProvisionNewClient(string group, string name, string hostName, bool staticIp)
@@ -73,21 +86,31 @@ namespace unifi.ipmanager.Services
 
             if (staticIp)
             {
-                var randomGen = new Random();
-                // TODO: Should get device list too
                 var ipGroup = UnifiOptions.IpGroups.FirstOrDefault(g => g.Name == group);
                 if (ipGroup != null)
                 {
                     int tries = 0;
-                    while (addRequest.fixed_ip == null || tries > 100)
+                    bool ipAssigned = false;
+                    while (!ipAssigned || tries < 100)
                     {
                         ++tries;
                         foreach (var block in ipGroup.Blocks)
                         {
-                            var assignedIp = $"192.168.1.{randomGen.Next(block.Min, block.Max)}";
-                            if (clients.All(c => c.Fixed_ip != assignedIp))
+                            var lastIpDigit = block.Min;
+                            while (lastIpDigit < block.Max)
                             {
-                                addRequest.fixed_ip = assignedIp;
+                                var assignedIp = $"192.168.1.{lastIpDigit}";
+                                if (clients.All(c => c.Fixed_ip != assignedIp))
+                                {
+                                    addRequest.fixed_ip = assignedIp;
+                                    ipAssigned = true;
+                                    break;
+                                }
+                             
+                                ++lastIpDigit;
+                            }
+                            if (ipAssigned)
+                            {
                                 break;
                             }
                         }
@@ -104,7 +127,7 @@ namespace unifi.ipmanager.Services
             Logger.LogDebug($"Payload String = {addRequestString}");
 
             var addResult = await UnifiOptions.Url
-                .AppendPathSegments("api", "s", "at7as3rk", "rest", "user")
+                .AppendPathSegments("api", "s", SiteId, "rest", "user")
                 .WithCookies(_cookieJar)
                 .WithHeader("X-Csrf-Token", csrfToken.Value)
                 .PostStringAsync(addRequestString)
@@ -117,6 +140,37 @@ namespace unifi.ipmanager.Services
             }
 
             return addResult.Data[0];
+        }
+
+        private async Task<List<UniClient>> GetDevicesAsUniClient()
+        {
+            await VerifyLogin();
+
+            var devicesClients = new List<UniClient>();
+
+            var data = await UnifiOptions.Url.AppendPathSegments("api", "s", SiteId, "stat", "device")
+                .WithCookies(_cookieJar).GetJsonAsync();
+
+            if (data.meta.rc == UniMeta.ErrorResponse)
+            {
+                Logger.LogError($"Error retrieving clients from {UnifiOptions.Url}: {data.Meta.Msg}");
+            }
+            else
+            {
+                foreach (var client in data.data)
+                {
+                    devicesClients.Add(new UniClient
+                    {
+                        _id = client._id,
+                        Fixed_ip = client.config_network.ip,
+                        Name = client.name,
+                        Mac = client.mac,
+                        Use_fixedip = true
+                    });
+                }
+            }
+
+            return devicesClients;
         }
 
 
