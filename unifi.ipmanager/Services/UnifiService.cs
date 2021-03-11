@@ -201,7 +201,7 @@ namespace unifi.ipmanager.Services
             var sBuilder = new StringBuilder();
             var r = new Random();
             byte b;
-            sBuilder.Append("00:15:5D");
+            sBuilder.Append("00:15:5D:");
             for (int i = 0; i < 3; i++)
             {
                 var number = r.Next(0, 255);

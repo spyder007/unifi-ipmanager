@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Converters;
 using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 using unifi.ipmanager.Services;
 
 namespace unifi.ipmanager
@@ -32,8 +33,10 @@ namespace unifi.ipmanager
 
             Configuration = builder.Build();
 
+            // Configure logging as per app settings, but always configure a console logger
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(Configuration)
+                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}", theme: AnsiConsoleTheme.Literate)
                 .CreateLogger();
 
             //LoggerFactory = loggerFactory;
