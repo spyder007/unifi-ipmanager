@@ -201,17 +201,18 @@ namespace unifi.ipmanager.Services
             var sBuilder = new StringBuilder();
             var r = new Random();
             byte b;
-            for (int i = 0; i < 6; i++)
+            sBuilder.Append("00:15:5D");
+            for (int i = 0; i < 3; i++)
             {
                 var number = r.Next(0, 255);
                 b = Convert.ToByte(number);
-                if (i == 0)
-                {
-                    b = SetBit(b, 6); //--> set locally administered
-                    b = UnsetBit(b, 7); // --> set unicast 
-                }
+                //if (i == 0)
+                //{
+                //    b = SetBit(b, 6); //--> set locally administered
+                //    b = UnsetBit(b, 7); // --> set unicast 
+                //}
                 sBuilder.Append(number.ToString("X2"));
-                if (i < 5)
+                if (i < 2)
                 {
                     sBuilder.Append(":");
                 }
