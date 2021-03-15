@@ -8,5 +8,6 @@ namespace unifi.ipmanager.Models
     public class UniNote
     {
         public bool Set_on_device { get; set; }
+        public string Dns_hostname { get; set; }
     }
 }
