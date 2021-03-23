@@ -186,12 +186,24 @@ namespace unifi.ipmanager.Services
                     strict = true
                 };
 
-                var response =  await UnifiOptions.Url.AppendPathSegments("api","login").WithCookies(out _cookieJar).PostJsonAsync(credentials).ReceiveJson<UniResponse<List<string>>>();
-                if (response.Meta.Rc == UniMeta.ErrorResponse)
+                try
                 {
-                    Logger.LogError($"Error logging on to ${UnifiOptions.Url}: {response.Meta.Msg}");
+                    var response = await UnifiOptions.Url.AppendPathSegments("api", "login").WithCookies(out _cookieJar).PostJsonAsync(credentials).ReceiveJson<UniResponse<List<string>>>();
+                }
+                catch (FlurlHttpException ex)
+                {
+                    var errorResponse = await ex.GetResponseJsonAsync<UniResponse<List<string>>>();
+                    if (errorResponse.Meta.Rc == UniMeta.ErrorResponse)
+                    {
+                        Logger.LogError($"Error logging on to ${UnifiOptions.Url}: {errorResponse.Meta.Msg}");
+                        return false;
+                    }
+                    Logger.LogDebug($"Error Logging in:0 URL - {UnifiOptions.Url}, UserName - {UnifiOptions.Username}, {UnifiOptions.Password}");
+                    Logger.LogError(ex, "Error logging in to Unifi Controller");
                     return false;
                 }
+                
+                
             }
             return true;
         }
