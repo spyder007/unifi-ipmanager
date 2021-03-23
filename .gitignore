@@ -34,3 +34,5 @@ Release.msproj
 *.nupkg
 **/.vscode/
 launchSettings.json
+
+*.tgz

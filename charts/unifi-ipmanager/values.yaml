@@ -1,0 +1,69 @@
+image:
+  repository: proget.mattgerega.com/spydersoft/ha/unifi.ipmanager
+  pullPolicy: IfNotPresent
+
+strategy:
+  type: Recreate
+
+imagePullSecrets: 
+  - name: spydersoft-proget
+
+secret:
+  UnifiControllerOptions__Password: "<yourpassword>"
+
+env:
+  Identity__ApiName: "unifi.ipmanager"
+  UnifiControllerOptions__Url: "https://unifi.mattgerega.com"
+  UnifiControllerOptions__Username: "admin"
+
+## The "standard-net-environment" ConfigMap is a list of standard environmental variables ,
+##  that are unique to the namespace (test/stage/prod).
+envFrom: 
+  - configMapRef:
+      name: standard-net-environment
+
+service:
+  port:
+    port: 80
+
+ingress:
+  enabled: true
+  annotations: 
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  labels: 
+    ingressClassName: "nginx"
+  hosts:
+    - host: test.mattgerega.net
+      paths:
+        - path: /unifi/ipmanager(/|$)(.*)
+          pathType: Prefix
+probes:
+  liveness:
+    enabled: true
+    ## Set this to true if you wish to specify your own livenessProbe
+    custom: true
+    ## The spec field contains the values for the default livenessProbe.
+    ## If you selected custom: true, this field holds the definition of the livenessProbe.
+    spec:
+      httpGet:
+        path: /health
+        port: 80
+      initialDelaySeconds: 0
+      periodSeconds: 10
+      timeoutSeconds: 1
+      failureThreshold: 3
+  readiness:
+    enabled: true
+    ## Set this to true if you wish to specify your own livenessProbe
+    custom: true
+    ## The spec field contains the values for the default livenessProbe.
+    ## If you selected custom: true, this field holds the definition of the livenessProbe.
+    spec:
+      httpGet:
+        path: /health
+        port: 80
+      initialDelaySeconds: 0
+      periodSeconds: 10
+      timeoutSeconds: 1
+      failureThreshold: 3
