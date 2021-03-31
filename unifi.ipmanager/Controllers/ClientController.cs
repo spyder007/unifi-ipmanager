@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using unifi.ipmanager.Models.DTO;
+using unifi.ipmanager.Models.Unifi;
 using unifi.ipmanager.Services;
 
 namespace unifi.ipmanager.Controllers
@@ -48,16 +50,23 @@ namespace unifi.ipmanager.Controllers
         /// </summary>
         /// <returns>ActionResult&lt;System.String&gt;.</returns>
         [HttpGet]
-        public async Task<ActionResult<List<UniClient>>> Get()
+        public async Task<ActionResult<ServiceResult<List<UniClient>>>> Get()
         {
             return await IUnifyService.GetAllFixedClients();
         }
 
         [HttpPost]
         [Route("provision")]
-        public async Task<ActionResult<UniClient>> ProvisionClient([FromBody] ProvisionRequest request)
+        public async Task<ActionResult<ServiceResult<UniClient>>> ProvisionClient([FromBody] ProvisionRequest request)
         {
-            return await IUnifyService.ProvisionNewClient(request.Group, request.Name, request.HostName, request.Static_ip);
+            return await IUnifyService.ProvisionNewClient(request.Group, request.Name, request.HostName, request.Static_ip, request.Sync_dns);
+        }
+
+        [HttpDelete]
+        [Route("{mac}")]
+        public async Task<ActionResult<ServiceResult>> DeleteClient([FromRoute] string mac)
+        {
+            return await IUnifyService.DeleteClient(mac);
         }
     }
 }

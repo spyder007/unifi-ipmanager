@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
-namespace unifi.ipmanager.Models
+namespace unifi.ipmanager.Models.Unifi
 {
     /// <summary>
     /// Class UniClient.

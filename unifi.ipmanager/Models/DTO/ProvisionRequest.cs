@@ -15,6 +15,6 @@ namespace unifi.ipmanager.Models
 
         public bool Static_ip { get; set; }
 
-
+        public bool Sync_dns { get; set; }
     }
 }

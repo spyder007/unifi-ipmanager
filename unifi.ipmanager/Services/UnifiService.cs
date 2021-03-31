@@ -1,32 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Formats.Asn1;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using System.Transactions;
-using Flurl;
+﻿using Flurl;
 using Flurl.Http;
-using Flurl.Util;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Serialization;
 using unifi.ipmanager.Models;
+using unifi.ipmanager.Models.DTO;
+using unifi.ipmanager.Models.Unifi;
 using NullValueHandling = Newtonsoft.Json.NullValueHandling;
+using UnifiRequests = unifi.ipmanager.Models.Unifi.Requests;
 
 namespace unifi.ipmanager.Services
 {
     public class UnifiService : IUnifiService
     {
         private const string SiteId = "at7as3rk";
+        private const string NetworkId = "59f62826e4b0c5498bc2a82e";
 
         private UnifiControllerOptions UnifiOptions { get; }
         private ILogger Logger { get; }
-
-        private FlurlClient _client;
-
+        
         private CookieJar _cookieJar;
 
         public UnifiService(IOptions<UnifiControllerOptions> options, ILogger<UnifiService> logger)
@@ -35,38 +33,85 @@ namespace unifi.ipmanager.Services
             Logger = logger;
         }
 
+        #region IUnifiService Implementation
 
-        public async Task<List<UniClient>> GetAllFixedClients()
+        public async Task<ServiceResult<List<UniClient>>> GetAllFixedClients()
         {
-            await VerifyLogin();
+            var result = new ServiceResult<List<UniClient>>();
+
+            if (!await VerifyLogin())
+            {
+                result.MarkFailed("Login failed.");
+                return result;
+            }
 
             var allClients = new List<UniClient>();
 
-            var data = await UnifiOptions.Url.AppendPathSegments("api", "s", SiteId, "stat", "alluser")
-                .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
-
-            if (data.Meta.Rc == UniMeta.ErrorResponse)
+            try
             {
-                Logger.LogError($"Error retrieving clients from {UnifiOptions.Url}: {data.Meta.Msg}");
+                var data = await UnifiOptions.Url.AppendPathSegments("api", "s", SiteId, "stat", "alluser")
+                    .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
+
+                if (data.Meta.Rc == UniMeta.ErrorResponse)
+                {
+                    Logger.LogError($"Error retrieving clients from {UnifiOptions.Url}: {data.Meta.Msg}");
+                }
+                else
+                {
+                    allClients.AddRange(data.Data.Where(uc => uc.Use_fixedip));
+                }
             }
-            else
+            catch (Exception e)
             {
-                allClients.AddRange(data.Data.Where(uc => uc.Use_fixedip));
+                result.MarkFailed(e);
+                return result;
             }
 
-            var devices = await GetDevicesAsUniClient();
-            if (devices != null && devices.Any())
+            try
             {
-                allClients.AddRange(devices);
+                var devices = await GetDevicesAsUniClient();
+                if (devices.Success)
+                {
+                    if (devices.Data != null && devices.Data.Any())
+                    {
+                        allClients.AddRange(devices.Data);
+                    }
+                }
+                else
+                {
+                    result.MarkFailed(devices.Errors);
+                    return result;
+                }
+            }
+            catch (Exception e)
+            {
+                result.MarkFailed(e);
+                return result;
             }
 
-            return allClients;
+            result.MarkSuccessful(allClients);
+
+            return result;
         }
 
-        public async Task<UniClient> ProvisionNewClient(string group, string name, string hostName, bool staticIp)
+        public async Task<ServiceResult<UniClient>> ProvisionNewClient(string group, string name, string hostName, bool staticIp, bool syncDns)
         {
-            await VerifyLogin();
-            var clients = await GetAllFixedClients();
+            var result = new ServiceResult<UniClient>();
+
+            if (!await VerifyLogin())
+            {
+                result.MarkFailed("Login failed.");
+                return result;
+            }
+
+            var clientsResult = await GetAllFixedClients();
+            if (!clientsResult.Success)
+            {
+                result.MarkFailed(clientsResult.Errors);
+            }
+
+            var clients = clientsResult.Data;
+
             var macAddress = GenerateMacAddress();
 
             while (clients.Any(c => c.Mac == macAddress))
@@ -74,15 +119,14 @@ namespace unifi.ipmanager.Services
                 macAddress = GenerateMacAddress();
             }
 
-            var addRequest = new AddUniClientRequest
+            var addRequest = new UnifiRequests.AddUniClientRequest
             {
                 mac = macAddress,
                 name = name,
                 hostname = hostName,
                 use_fixedip = staticIp,
-                network_id = "59f62826e4b0c5498bc2a82e"
+                network_id = NetworkId
             };
-
 
             if (staticIp)
             {
@@ -106,7 +150,7 @@ namespace unifi.ipmanager.Services
                                     ipAssigned = true;
                                     break;
                                 }
-                             
+
                                 ++lastIpDigit;
                             }
                             if (ipAssigned)
@@ -116,63 +160,215 @@ namespace unifi.ipmanager.Services
                         }
                     }
                 }
-
             }
 
-            var addRequestString = JsonConvert.SerializeObject(addRequest, new JsonSerializerSettings() {NullValueHandling = NullValueHandling.Ignore});
+            var addRequestString = JsonConvert.SerializeObject(addRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
 
             var csrfToken = _cookieJar.FirstOrDefault(cookie => cookie.Name == "csrf_token");
 
             Logger.LogDebug($"CSRF = {csrfToken.Value}");
             Logger.LogDebug($"Payload String = {addRequestString}");
-
-            var addResult = await UnifiOptions.Url
-                .AppendPathSegments("api", "s", SiteId, "rest", "user")
-                .WithCookies(_cookieJar)
-                .WithHeader("X-Csrf-Token", csrfToken.Value)
-                .PostStringAsync(addRequestString)
-                .ReceiveJson<UniResponse<List<UniClient>>>();
-
-            if (addResult.Meta.Rc == UniMeta.ErrorResponse)
+            try
             {
-                Logger.LogError($"Error adding client to {UnifiOptions.Url}: {addResult.Meta.Msg}");
-                return null;
-            }
+                var addResult = await UnifiOptions.Url
+                    .AppendPathSegments("api", "s", SiteId, "rest", "user")
+                    .WithCookies(_cookieJar)
+                    .WithHeader("X-Csrf-Token", csrfToken.Value)
+                    .PostStringAsync(addRequestString)
+                    .ReceiveJson<UniResponse<List<UniClient>>>();
 
-            return addResult.Data[0];
-        }
-
-        private async Task<List<UniClient>> GetDevicesAsUniClient()
-        {
-            await VerifyLogin();
-
-            var devicesClients = new List<UniClient>();
-
-            var data = await UnifiOptions.Url.AppendPathSegments("api", "s", SiteId, "stat", "device")
-                .WithCookies(_cookieJar).GetJsonAsync();
-
-            if (data.meta.rc == UniMeta.ErrorResponse)
-            {
-                Logger.LogError($"Error retrieving clients from {UnifiOptions.Url}: {data.Meta.Msg}");
-            }
-            else
-            {
-                foreach (var client in data.data)
+                if (addResult.Meta.Rc == UniMeta.ErrorResponse)
                 {
-                    devicesClients.Add(new UniClient
-                    {
-                        _id = client._id,
-                        Fixed_ip = client.config_network.ip,
-                        Name = client.name,
-                        Mac = client.mac,
-                        Use_fixedip = true
-                    });
+                    var error = $"Error adding client to {UnifiOptions.Url}: {addResult.Meta.Msg}";
+                    Logger.LogError(error);
+                    result.MarkFailed(error);
+                    return result;
+                }
+                result.MarkSuccessful(addResult.Data[0]);
+            }
+            catch (Exception e)
+            {
+                result.MarkFailed(e);
+                return result;
+            }
+
+            try
+            {
+                var note = new UniNote()
+                {
+                    Dns_hostname = hostName,
+                    Set_on_device = false,
+                    Sync_dnshostname = syncDns
+                };
+
+                var updateResult = await UpdateNotes(result.Data._id, result.Data.Name, note);
+                if (!updateResult.Success)
+                {
+                    result.MarkFailed(updateResult.Errors);
                 }
             }
+            catch (Exception e)
+            {
+                result.MarkFailed(e);
+                return result;
+            }
 
-            return devicesClients;
+            return result;
         }
 
+        public async Task<ServiceResult> DeleteClient(string mac)
+        {
+            var result = new ServiceResult();
+
+            if (!await VerifyLogin())
+            {
+                result.MarkFailed("Login failed.");
+                return result;
+            }
+            
+            var postRequest = new UnifiRequests.StaRequest()
+            {
+                cmd = "forget-sta",
+                macs = new List<string> { mac }
+            };
+
+            var postRequestString = JsonConvert.SerializeObject(postRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
+
+            var csrfToken = _cookieJar.FirstOrDefault(cookie => cookie.Name == "csrf_token");
+
+            Logger.LogDebug($"CSRF = {csrfToken.Value}");
+            Logger.LogDebug($"Payload String = {postRequestString}");
+            try
+            {
+                var noteResult = await UnifiOptions.Url
+                    .AppendPathSegments("api", "s", SiteId, "cmd", "stamgr")
+                    .WithCookies(_cookieJar)
+                    .WithHeader("X-Csrf-Token", csrfToken.Value)
+                    .PostStringAsync(postRequestString)
+                    .ReceiveJson<UniResponse<List<UniClient>>>();
+
+                if (noteResult.Meta.Rc == UniMeta.ErrorResponse)
+                {
+                    var error = $"Error deleting client : {noteResult.Meta.Msg}";
+                    Logger.LogError(error);
+                    result.MarkFailed(error);
+                }
+                else
+                {
+                    result.MarkSuccessful();
+                }
+            }
+            catch (Exception e)
+            {
+                result.MarkFailed(e);
+            }
+
+            return result;
+        }
+
+        #endregion IUnifiService Implementation
+
+        private async Task<ServiceResult> UpdateNotes(string id, string name, UniNote note)
+        {
+            var result = new ServiceResult();
+
+            if (!await VerifyLogin())
+            {
+                result.MarkFailed("Login failed.");
+                return result;
+            }
+
+            var noteString = JsonConvert.SerializeObject(note, new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            });
+            var postRequest = new UnifiRequests.EditUniClientRequest
+            {
+                name = "",
+                note = noteString,
+                usergroup_id = string.Empty
+            };
+
+            var postRequestString = JsonConvert.SerializeObject(postRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
+
+            var csrfToken = _cookieJar.FirstOrDefault(cookie => cookie.Name == "csrf_token");
+
+            Logger.LogDebug($"CSRF = {csrfToken.Value}");
+            Logger.LogDebug($"Payload String = {postRequestString}");
+            try
+            {
+                var noteResult = await UnifiOptions.Url
+                    .AppendPathSegments("api", "s", SiteId, "rest", "user", id)
+                    .WithCookies(_cookieJar)
+                    .WithHeader("X-Csrf-Token", csrfToken.Value)
+                    .PutStringAsync(postRequestString)
+                    .ReceiveJson<UniResponse<List<UniClient>>>();
+
+                if (noteResult.Meta.Rc == UniMeta.ErrorResponse)
+                {
+                    var error = $"Error adding client to {UnifiOptions.Url}: {noteResult.Meta.Msg}";
+                    Logger.LogError(error);
+                    result.MarkFailed(error);
+                }
+                else
+                {
+                    result.MarkSuccessful();
+                }
+            }
+            catch (Exception e)
+            {
+                result.MarkFailed(e);
+            }
+
+            return result;
+        }
+
+        private async Task<ServiceResult<List<UniClient>>> GetDevicesAsUniClient()
+        {
+            var result = new ServiceResult<List<UniClient>>();
+
+            if (!await VerifyLogin())
+            {
+                result.MarkFailed("Login failed.");
+                return result;
+            }
+
+            try
+            {
+                var devicesClients = new List<UniClient>();
+
+                var data = await UnifiOptions.Url.AppendPathSegments("api", "s", SiteId, "stat", "device")
+                    .WithCookies(_cookieJar).GetJsonAsync();
+
+                if (data.meta.rc == UniMeta.ErrorResponse)
+                {
+                    var error = $"Error retrieving clients from {UnifiOptions.Url}: {data.Meta.Msg}";
+                    Logger.LogError(error);
+                    result.MarkFailed(error);
+                }
+                else
+                {
+                    foreach (var client in data.data)
+                    {
+                        devicesClients.Add(new UniClient
+                        {
+                            _id = client._id,
+                            Fixed_ip = client.config_network.ip,
+                            Name = client.name,
+                            Mac = client.mac,
+                            Use_fixedip = true
+                        });
+                    }
+                    result.MarkSuccessful(devicesClients);
+                }
+            }
+            catch (Exception e)
+            {
+                result.MarkFailed(e);
+            }
+
+            return result;
+        }
 
         private async Task<bool> VerifyLogin()
         {
@@ -202,8 +398,6 @@ namespace unifi.ipmanager.Services
                     Logger.LogError(ex, "Error logging in to Unifi Controller");
                     return false;
                 }
-                
-                
             }
             return true;
         }
@@ -221,7 +415,7 @@ namespace unifi.ipmanager.Services
                 //if (i == 0)
                 //{
                 //    b = SetBit(b, 6); //--> set locally administered
-                //    b = UnsetBit(b, 7); // --> set unicast 
+                //    b = UnsetBit(b, 7); // --> set unicast
                 //}
                 sBuilder.Append(number.ToString("X2"));
                 if (i < 2)
@@ -260,25 +454,5 @@ namespace unifi.ipmanager.Services
 
             return default;
         }
-
-        #region Unifi Client Requests
-        private class AddUniClientRequest
-        {
-            public string mac { get; set; }
-
-            public string name { get; set; }
-
-            public string hostname { get; set; }
-
-            public bool use_fixedip { get; set; }
-
-            public string network_id { get; set; }
-
-            public string fixed_ip { get; set; }
-        }
-
-        #endregion
-
     }
-
 }
