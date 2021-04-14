@@ -38,7 +38,7 @@ variables:
 trigger:
   branches:
     include:
-      - master
+      - main
   paths:
     exclude:
       - README.md
