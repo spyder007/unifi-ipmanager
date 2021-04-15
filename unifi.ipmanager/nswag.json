@@ -1,6 +1,6 @@
 {
   "runtime": "Net50",
-  "defaultVariables": null,
+  "defaultVariables": "Configuration=Debug",
   "documentGenerator": {
     "aspNetCoreToOpenApi": {
       "project": "unifi.ipmanager.csproj",
@@ -42,7 +42,7 @@
       "contractResolverType": null,
       "serializerSettingsType": null,
       "useDocumentProvider": true,
-      "documentName": "v1",
+      "documentName": "unifi.ipmanager",
       "aspNetCoreEnvironment": null,
       "createWebHostBuilderMethod": null,
       "startupType": null,
