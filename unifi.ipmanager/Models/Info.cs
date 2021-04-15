@@ -11,11 +11,6 @@ namespace unifi.ipmanager.Models
     public class Info
     {
         /// <summary>
-        /// Gets or sets the cache database connection string.
-        /// </summary>
-        /// <value>The cache database connection string.</value>
-        public string CacheDbConnectionString { get; set; }
-        /// <summary>
         /// Gets or sets the options.
         /// </summary>
         /// <value>The options.</value>

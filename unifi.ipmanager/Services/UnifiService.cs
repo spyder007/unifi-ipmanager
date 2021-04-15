@@ -356,7 +356,8 @@ namespace unifi.ipmanager.Services
                             Fixed_ip = client.config_network.ip,
                             Name = client.name,
                             Mac = client.mac,
-                            Use_fixedip = true
+                            Use_fixedip = true,
+                            ObjectType = "device"
                         });
                     }
                     result.MarkSuccessful(devicesClients);

@@ -49,11 +49,9 @@ namespace unifi.ipmanager.Controllers
         /// </summary>
         /// <returns>ActionResult&lt;Models.Info&gt;.</returns>
         [HttpGet]
-        public ActionResult<Models.Info> Get()
+        public ActionResult<Info> Get()
         {
-            var info = new Models.Info();
-            info.CacheDbConnectionString = Configuration.GetConnectionString("CacheDB");
-            info.UnifiControllerOptions = UnifiControllerOptions;
+            var info = new Info {UnifiControllerOptions = UnifiControllerOptions};
 
 
             return info;

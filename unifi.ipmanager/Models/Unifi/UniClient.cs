@@ -9,6 +9,11 @@ namespace unifi.ipmanager.Models.Unifi
     {
         private UniNote _note;
 
+        public UniClient()
+        {
+            ObjectType = "client";
+        }
+
         /// <summary>
         /// Gets or sets the identifier.
         /// </summary>
@@ -55,7 +60,11 @@ namespace unifi.ipmanager.Models.Unifi
         /// </summary>
         /// <value>The name.</value>
         public string Name { get; set; }
-
+        /// <summary>
+        /// Gets or sets the type of the object.
+        /// </summary>
+        /// <value>The type of the object.</value>
+        public string ObjectType { get; set; }
         public UniNote NoteObject
         {
             get
