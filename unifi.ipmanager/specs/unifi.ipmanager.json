@@ -291,6 +291,10 @@
                 "$ref": "#/components/schemas/UnifiControllerOptions"
               }
             ]
+          },
+          "version": {
+            "type": "string",
+            "nullable": true
           }
         }
       },

@@ -15,5 +15,9 @@ namespace unifi.ipmanager.Models
         /// </summary>
         /// <value>The options.</value>
         public UnifiControllerOptions UnifiControllerOptions { get; set; }
+
+        public string Version { get; set; }
+
+
     }
 }
