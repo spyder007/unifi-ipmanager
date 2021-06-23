@@ -13,10 +13,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 using unifi.ipmanager.Services;
+using YamlDotNet.Core.Events;
 
 namespace unifi.ipmanager
 {
@@ -66,14 +69,28 @@ namespace unifi.ipmanager
                     options.ApiName = Configuration.GetValue<string>("Identity:ApiName");
                 });
 
-            services.AddMvcCore(options => options.EnableEndpointRouting = false)
+            services.AddMvcCore(options =>
+                {
+                    options.EnableEndpointRouting = false;
+                })
                 .AddAuthorization()
                 .AddApiExplorer();
 
             services.Configure<UnifiControllerOptions>(Configuration.GetSection("UnifiControllerOptions"));
             services.AddScoped<IUnifiService, UnifiService>();
+            services.AddRouting(options => options.LowercaseUrls = true);
 
-            services.AddOpenApiDocument();
+            services.AddOpenApiDocument(doc =>
+            {
+                doc.DocumentName = "unifi.ipmanager";
+                doc.Title = "Unifi IP Manager API";
+                doc.Description = "API Wrapper for the Unifi Controller";
+                doc.SerializerSettings = new JsonSerializerSettings
+                {
+                    
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                };
+            });
             services.AddHealthChecks();
 
         }

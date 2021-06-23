@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using unifi.ipmanager.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace unifi.ipmanager.Controllers
@@ -27,6 +30,8 @@ namespace unifi.ipmanager.Controllers
         /// </summary>
         /// <value>The configuration.</value>
         private IConfiguration Configuration { get; set; }
+
+        private ILogger<InfoController> Log { get; set; }
         /// <summary>
         /// Gets or sets the UnifiControllerOptions options.
         /// </summary>
@@ -37,9 +42,11 @@ namespace unifi.ipmanager.Controllers
         /// Initializes a new instance of the <see cref="InfoController"/> class.
         /// </summary>
         /// <param name="configuration">The configuration.</param>
+        /// <param name="log"></param>
         /// <param name="myOpts">The options.</param>
-        public InfoController(IConfiguration configuration, IOptions<UnifiControllerOptions> myOpts)
+        public InfoController(IConfiguration configuration, ILogger<InfoController> log, IOptions<UnifiControllerOptions> myOpts)
         {
+            Log = log;
             Configuration = configuration;
             UnifiControllerOptions = myOpts.Value;
         }
@@ -49,14 +56,31 @@ namespace unifi.ipmanager.Controllers
         /// </summary>
         /// <returns>ActionResult&lt;Models.Info&gt;.</returns>
         [HttpGet]
-        public ActionResult<Models.Info> Get()
+        public ActionResult<Info> Get()
         {
-            var info = new Models.Info();
-            info.CacheDbConnectionString = Configuration.GetConnectionString("CacheDB");
-            info.UnifiControllerOptions = UnifiControllerOptions;
-
+            var info = new Info
+            {
+                UnifiControllerOptions = UnifiControllerOptions,
+                Version = GetVersion()
+            };
+            
 
             return info;
+        }
+
+        private string GetVersion()
+        {
+            try
+            {
+                var fileInfo = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
+
+                return fileInfo.ProductVersion;
+            }
+            catch (Exception e)
+            {
+                Log.LogError(e, "Error retrieving file version");
+                return "0.0.0.0";
+            }
         }
     }
 }

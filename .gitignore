@@ -35,4 +35,9 @@ Release.msproj
 **/.vscode/
 launchSettings.json
 
+**/node_modules
+
+output
+
+
 *.tgz
