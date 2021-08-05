@@ -25,6 +25,7 @@ envFrom:
 service:
   port:
     port: 80
+    targetPort: 8080
 
 ingress:
   enabled: true
@@ -48,7 +49,7 @@ probes:
     spec:
       httpGet:
         path: /health
-        port: 80
+        port: 8080
       initialDelaySeconds: 0
       periodSeconds: 10
       timeoutSeconds: 1
@@ -62,7 +63,7 @@ probes:
     spec:
       httpGet:
         path: /health
-        port: 80
+        port: 8080
       initialDelaySeconds: 0
       periodSeconds: 10
       timeoutSeconds: 1
