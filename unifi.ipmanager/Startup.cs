@@ -25,6 +25,7 @@ namespace unifi.ipmanager
 {
     public class Startup
     {
+        readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
         public Startup(IWebHostEnvironment env)
         {
             var builder = new ConfigurationBuilder()
@@ -91,6 +92,17 @@ namespace unifi.ipmanager
                     ContractResolver = new CamelCasePropertyNamesContractResolver()
                 };
             });
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                                {
+                                    builder.WithOrigins("http://mattgerega.net",
+                                                        "http://api.mattgerega.net",
+                                                        "http://localhost")
+                                                        .AllowAnyHeader()
+                                                        .AllowAnyMethod();
+                                });
+            });
             services.AddHealthChecks();
 
         }
@@ -107,7 +119,8 @@ namespace unifi.ipmanager
             loggerFactory.AddSerilog();
             app.UseOpenApi();
             app.UseAuthentication();
-            
+            app.UseCors();
+
             app.UseRouting();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
