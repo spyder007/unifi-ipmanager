@@ -98,7 +98,8 @@ namespace unifi.ipmanager
                                 {
                                     builder.WithOrigins("http://mattgerega.net",
                                                         "http://api.mattgerega.net",
-                                                        "http://localhost")
+                                                        "http://localhost",
+                                                        "http://localhost:3000")
                                                         .AllowAnyHeader()
                                                         .AllowAnyMethod();
                                 });
