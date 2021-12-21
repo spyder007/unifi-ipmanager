@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using unifi.ipmanager.Controllers;
+﻿using unifi.ipmanager.Controllers;
 using unifi.ipmanager.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -12,20 +8,16 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 using unifi.ipmanager.Services;
-using YamlDotNet.Core.Events;
 
 namespace unifi.ipmanager
 {
     public class Startup
     {
-        readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
         public Startup(IWebHostEnvironment env)
         {
             var builder = new ConfigurationBuilder()
@@ -96,10 +88,8 @@ namespace unifi.ipmanager
             {
                 options.AddDefaultPolicy(builder =>
                                 {
-                                    builder.WithOrigins("http://mattgerega.net",
-                                                        "http://api.mattgerega.net",
-                                                        "http://localhost",
-                                                        "http://localhost:3000")
+                                    var origins = Configuration.GetSection("AllowedOrigins").Get<string[]>();
+                                    builder.WithOrigins(origins)
                                                         .AllowAnyHeader()
                                                         .AllowAnyMethod();
                                 });
