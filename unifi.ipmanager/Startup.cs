@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using unifi.ipmanager.Controllers;
+﻿using unifi.ipmanager.Controllers;
 using unifi.ipmanager.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -12,14 +8,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 using unifi.ipmanager.Services;
-using YamlDotNet.Core.Events;
 
 namespace unifi.ipmanager
 {
@@ -91,6 +84,16 @@ namespace unifi.ipmanager
                     ContractResolver = new CamelCasePropertyNamesContractResolver()
                 };
             });
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                                {
+                                    var origins = Configuration.GetSection("AllowedOrigins").Get<string[]>();
+                                    builder.WithOrigins(origins)
+                                                        .AllowAnyHeader()
+                                                        .AllowAnyMethod();
+                                });
+            });
             services.AddHealthChecks();
 
         }
@@ -107,7 +110,8 @@ namespace unifi.ipmanager
             loggerFactory.AddSerilog();
             app.UseOpenApi();
             app.UseAuthentication();
-            
+            app.UseCors();
+
             app.UseRouting();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
