@@ -57,7 +57,7 @@ stages:
     - template: step_collections/dotnet-api-build-steps.yml@templates
       parameters:
         publishProject: $(publishProject)
-
+        netCoreVersion: '6.0.x'
     # this code takes all the files in $(Build.ArtifactStagingDirectory) and uploads them as an artifact of your pipeline.
     - publish: '$(Build.ArtifactStagingDirectory)' 
       artifact: '$(artifactName)'
@@ -86,6 +86,7 @@ stages:
     - task: CmdLine@2
       inputs:
         script: |
+         helm dependency update
          helm package . --app-version $(build.buildnumber) --version $(build.buildnumber) -u
          curl $(helm_repository_url) --user $(helm_username):$(helm_password) --upload-file $(helmChartName)-$(build.buildnumber).tgz
         workingDirectory: $(helmChartPath)
