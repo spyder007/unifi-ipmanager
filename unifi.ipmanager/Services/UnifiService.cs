@@ -22,13 +22,15 @@ namespace unifi.ipmanager.Services
         private const string SiteId = "at7as3rk";
         private const string NetworkId = "59f62826e4b0c5498bc2a82e";
 
+        private IIpService IpService { get; }
         private UnifiControllerOptions UnifiOptions { get; }
         private ILogger Logger { get; }
         
         private CookieJar _cookieJar;
 
-        public UnifiService(IOptions<UnifiControllerOptions> options, ILogger<UnifiService> logger)
+        public UnifiService(IOptions<UnifiControllerOptions> options, IIpService ipService, ILogger<UnifiService> logger)
         {
+            IpService = ipService;
             UnifiOptions = options.Value;
             Logger = logger;
         }
@@ -58,6 +60,18 @@ namespace unifi.ipmanager.Services
                 }
                 else
                 {
+                    data.Data.ForEach(client =>
+                    {
+                        if (string.IsNullOrWhiteSpace(client.Name))
+                        {
+                            client.Name = client.Hostname;
+                        }
+                        if (client.Use_fixedip)
+                        {
+                            client.IpGroup = IpService.GetIpGroupForAddress(client.Fixed_ip);
+                        }
+                    });
+
                     allClients.AddRange(data.Data.Where(uc => uc.Use_fixedip));
                 }
             }
@@ -88,7 +102,7 @@ namespace unifi.ipmanager.Services
                 result.MarkFailed(e);
                 return result;
             }
-
+            
             result.MarkSuccessful(allClients);
 
             return result;
@@ -130,35 +144,10 @@ namespace unifi.ipmanager.Services
 
             if (staticIp)
             {
-                var ipGroup = UnifiOptions.IpGroups.FirstOrDefault(g => g.Name == group);
-                if (ipGroup != null)
+                var assignedIp = IpService.GetUnusedGroupIpAddress(group, clients.Select(c => c.Fixed_ip).ToList());
+                if (!string.IsNullOrWhiteSpace(assignedIp))
                 {
-                    int tries = 0;
-                    bool ipAssigned = false;
-                    while (!ipAssigned || tries < 100)
-                    {
-                        ++tries;
-                        foreach (var block in ipGroup.Blocks)
-                        {
-                            var lastIpDigit = block.Min;
-                            while (lastIpDigit < block.Max)
-                            {
-                                var assignedIp = $"192.168.1.{lastIpDigit}";
-                                if (clients.All(c => c.Fixed_ip != assignedIp))
-                                {
-                                    addRequest.fixed_ip = assignedIp;
-                                    ipAssigned = true;
-                                    break;
-                                }
-
-                                ++lastIpDigit;
-                            }
-                            if (ipAssigned)
-                            {
-                                break;
-                            }
-                        }
-                    }
+                    addRequest.fixed_ip = assignedIp;
                 }
             }
 
@@ -357,7 +346,8 @@ namespace unifi.ipmanager.Services
                             Name = client.name,
                             Mac = client.mac,
                             Use_fixedip = true,
-                            ObjectType = "device"
+                            ObjectType = "device",
+                            IpGroup = IpService.GetIpGroupForAddress(client.config_network.ip)
                         });
                     }
                     result.MarkSuccessful(devicesClients);

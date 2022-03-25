@@ -1,10 +1,14 @@
-## Feature Build Pipeline - Build and publish to development channel
+## Release Build Pipeline - Build master and push to release-candidate channel
 resources:
   repositories:
     - repository: templates
       type: BitBucket
       endpoint: "Bitbucket - spydersoft"
       name: spydersoftteam/azure-devops-templates
+    - repository: helmfileconfig
+      type: BitBucket
+      endpoint: Bitbucket - spydersoft
+      name: spydersoftteam/helm-app-configuration
 
 variables:
   - group: helm-repository
@@ -20,10 +24,6 @@ variables:
     value: proget.mattgerega.com
   - name: dockerImageFileName
     value: unifi_ipmanager
-  - name: helmChartName
-    value: unifi-ipmanager
-  - name: helmChartPath
-    value: $(Build.SourcesDirectory)/charts/unifi-ipmanager
   - name: artifactName
     value: unifiIpManager
   - name: artifactZipName
@@ -38,6 +38,7 @@ variables:
 trigger:
   branches:
     include:
+      - main
       - feature/*
   paths:
     exclude:
@@ -45,14 +46,12 @@ trigger:
 
 pr: none
 
-
 stages:
 - stage: Build
   jobs:
   - job: BuildJob
     pool:
       name: Default
-      demands: agent.os -equals Linux
     steps:
     - template: step_collections/dotnet-api-build-steps.yml@templates
       parameters:
@@ -73,46 +72,19 @@ stages:
       artifactName: '$(artifactName)'
       artifactZipName: $(artifactZipName)
       dockerImageFileName: $(dockerImageFileName)
-        
 
-- stage: helm_publish
-  displayName: Publish Helm Chart
-  jobs:
-  - job: create_helm_chart_and_publish
-    pool:
-      name: Default
-      demands: agent.os -equals Linux
-    steps:
-    - task: CmdLine@2
-      inputs:
-        script: |
-         helm dependency update
-         helm package . --app-version $(build.buildnumber) --version $(build.buildnumber) -u
-         curl $(helm_repository_url) --user $(helm_username):$(helm_password) --upload-file $(helmChartName)-$(build.buildnumber).tgz
-        workingDirectory: $(helmChartPath)
-
-- stage: test_release
+- stage: updateHelmConfig
+  displayName: Update Helm Config Repository
   dependsOn:
-  - helm_publish
-  displayName: Create and Deploy Octopus Release to Test Channel
+  - docker_publish
   jobs:
-  - deployment: test
-    displayName: 'Deploy to Test'
-    environment: test
+  - job: updateHelmConfigJob
     pool:
       name: Default
-      demands: agent.os -equals Linux
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: OctopusCreateRelease@4
-            inputs:
-              OctoConnectedServiceName: 'octopus-mattgerega-com'
-              Space: 'Gerega' #'Spaces-1'
-              ProjectGroup: 'Home Automation' 
-              ProjectName: 'unifi.ipmanager.k8' 
-              ReleaseNumber: '$(build.buildnumber)'
-              Channel: 'development' #'Channels-281'
-              DeployToEnvironment: 'mattgerega.net (Test)' #'Environments-1'
-              AdditionalArguments: '--packageversion $(build.buildnumber)'
+    steps:
+    - template: publish/helmfileconfig/steps-process-cicd/steps-process-cicd-v1.yml@templates
+      parameters:
+        repositoryResource: helmfileconfig
+        branchName: $(Build.SourceBranch)
+        tagsCollection: unifi_ipmanager=$(build.buildnumber)
+        commitMessage: Updated unifi_ipmanager to $(build.buildnumber)

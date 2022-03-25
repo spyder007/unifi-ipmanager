@@ -25,20 +25,6 @@ namespace unifi.ipmanager.Models
         /// <value>The client secret.</value>
         public string Password { get; set; }
 
-        public List<IpGroup> IpGroups { get; set; }
     }
 
-    public class IpGroup
-    {
-        public string Name { get; set; }
-
-        public List<IpBlock> Blocks { get; set; }
-    }
-
-    public class IpBlock
-    {
-        public int Min { get; set; }
-
-        public int Max { get; set; }
-    }
 }

@@ -18,31 +18,19 @@ namespace unifi.ipmanager
 {
     public class Startup
     {
-        public Startup(IWebHostEnvironment env)
+        public Startup(IConfiguration configuration)
         {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
-                .AddUserSecrets<Startup>(true)
-                .AddEnvironmentVariables();
+            Configuration = configuration;
+        }
+        public IConfiguration Configuration { get; }
 
-            Configuration = builder.Build();
-
-            // Configure logging as per app settings, but always configure a console logger
+        public void ConfigureServices(IServiceCollection services)
+        {
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(Configuration)
                 .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}", theme: AnsiConsoleTheme.Literate)
                 .CreateLogger();
-
-            //LoggerFactory = loggerFactory;
-        }
-
-        public IConfiguration Configuration { get; }
-
-        // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
-        {
+        
             services.AddSingleton<IConfiguration>(provider => Configuration);
             services.AddApiVersioning(options =>
             {
@@ -70,7 +58,9 @@ namespace unifi.ipmanager
                 .AddApiExplorer();
 
             services.Configure<UnifiControllerOptions>(Configuration.GetSection("UnifiControllerOptions"));
+            services.Configure<IpOptions>(Configuration.GetSection("IpOptions"));
             services.AddScoped<IUnifiService, UnifiService>();
+            services.AddScoped<IIpService, IpService>();
             services.AddRouting(options => options.LowercaseUrls = true);
 
             services.AddOpenApiDocument(doc =>
@@ -99,7 +89,7 @@ namespace unifi.ipmanager
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -107,7 +97,6 @@ namespace unifi.ipmanager
             }
 
             app.UseHealthChecks("/health", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
-            loggerFactory.AddSerilog();
             app.UseOpenApi();
             app.UseAuthentication();
             app.UseCors();
