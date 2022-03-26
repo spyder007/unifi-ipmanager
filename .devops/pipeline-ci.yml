@@ -82,7 +82,7 @@ stages:
     pool:
       name: Default
     steps:
-    - template: publish/helmfileconfig/steps-process-cicd/steps-process-cicd-v1.yml@templates
+    - template: publish/helmfileconfig/steps-process-cicd/v1.yml@templates
       parameters:
         repositoryResource: helmfileconfig
         branchName: $(Build.SourceBranch)
