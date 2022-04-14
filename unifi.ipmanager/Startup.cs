@@ -1,5 +1,6 @@
 ﻿using unifi.ipmanager.Controllers;
 using unifi.ipmanager.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
@@ -13,6 +14,7 @@ using Newtonsoft.Json.Serialization;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 using unifi.ipmanager.Services;
+
 
 namespace unifi.ipmanager
 {
@@ -42,12 +44,13 @@ namespace unifi.ipmanager
 
             });
 
-            services.AddAuthentication("Bearer")
-                .AddIdentityServerAuthentication(options =>
-                {
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options => {
                     options.Authority = Configuration.GetValue<string>("Identity:AuthorityUrl");
-                    options.RequireHttpsMetadata = false;
-                    options.ApiName = Configuration.GetValue<string>("Identity:ApiName");
+                    options.Audience = Configuration.GetValue<string>("Identity:ApiName");
+
+                    options.TokenValidationParameters.ValidTypes = new[] { "at+jwt" };
+
                 });
 
             services.AddMvcCore(options =>
