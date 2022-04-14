@@ -18,12 +18,6 @@ try
     var builder = WebApplication.CreateBuilder(args);
     var config = builder.Configuration;
 
-    // Add environment variables to allow us to override key vault secrets while debugging
-    config.AddEnvironmentVariables();
-
-    // re-add user secrets last to override keyvault connection strings
-    config.AddUserSecrets<Program>(optional: true);
-
     builder.Host.UseSerilog((context, services, configuration) =>
     {
         configuration
@@ -39,10 +33,10 @@ try
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Accruent.Authentication.Api.TokenService failed to start.");
+    Log.Fatal(ex, "unifi.ipmanager failed to start.");
 }
 finally
 {
-    Log.Information("Accruent.Authentication.Api.TokenService shut down complete");
+    Log.Information("unifi.ipmanager shut down complete");
     Log.CloseAndFlush();
 }
