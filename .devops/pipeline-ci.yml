@@ -1,4 +1,4 @@
-## Release Build Pipeline - Build master and push to release-candidate channel
+## Build Pipeline - Build, publish container image, and update helmfile config
 resources:
   repositories:
     - repository: templates
@@ -9,31 +9,6 @@ resources:
       type: BitBucket
       endpoint: Bitbucket - spydersoft
       name: spydersoftteam/ha-helm-app-config
-
-variables:
-  - group: helm-repository
-  - name: DOCKER_BUILDKIT
-    value: 1
-  - name: BUILD_CONFIGURATION
-    value: "Release"
-  - name: dockerImageName
-    value: spydersoft/ha/unifi.ipmanager
-  - name: containerRegistryName
-    value: proget_docker
-  - name: containerRegistryUrl
-    value: proget.mattgerega.com
-  - name: dockerImageFileName
-    value: unifi_ipmanager
-  - name: artifactName
-    value: unifiIpManager
-  - name: artifactZipName
-    value: unifi.ipmanager
-  - name: npmInstallFolder
-    value: $(Build.SourcesDirectory)/unifi.ipmanager
-  - name: gulpFolder
-    value: $(Build.SourcesDirectory)/unifi.ipmanager
-  - name: publishProject
-    value: unifi.ipmanager/unifi.ipmanager.csproj
 
 trigger:
   branches:
@@ -46,45 +21,13 @@ trigger:
 
 pr: none
 
-stages:
-- stage: Build
-  jobs:
-  - job: BuildJob
-    pool:
-      name: Default
-    steps:
-    - template: step_collections/dotnet-api-build-steps.yml@templates
-      parameters:
-        publishProject: $(publishProject)
-        netCoreVersion: '6.0.x'
-    # this code takes all the files in $(Build.ArtifactStagingDirectory) and uploads them as an artifact of your pipeline.
-    - publish: '$(Build.ArtifactStagingDirectory)' 
-      artifact: '$(artifactName)'
-
-- stage: docker_publish
-  displayName: Create Docker Image
-  jobs:
-  - template: jobs/docker-image-job.yml@templates
-    parameters:
-      dockerImageName: $(dockerImageName)
-      containerRegistryName: $(containerRegistryName)
-      containerRegistryUrl: $(containerRegistryUrl)
-      artifactName: '$(artifactName)'
-      artifactZipName: $(artifactZipName)
-      dockerImageFileName: $(dockerImageFileName)
-
-- stage: updateHelmConfig
-  displayName: Update Helm Config Repository
-  dependsOn:
-  - docker_publish
-  jobs:
-  - job: updateHelmConfigJob
-    pool:
-      name: Default
-    steps:
-    - template: publish/helmfileconfig/steps-process-cicd/v1.yml@templates
-      parameters:
-        repositoryResource: helmfileconfig
-        branchName: $(Build.SourceBranch)
-        tagsCollection: unifi_ipmanager=$(build.buildnumber)
-        commitMessage: Updated unifi_ipmanager to $(build.buildnumber)
+extends:
+  template: stages/stages-build-docker-update-helm/v1.yml@templates
+  parameters:
+    publishProject: unifi.ipmanager/unifi.ipmanager.csproj
+    artifactName: unifiIpManager
+    artifactZipName: unifi.ipmanager
+    dockerImageFileName: unifi_ipmanager
+    dockerImageName: spydersoft/ha/unifi.ipmanager
+    imageTagVariableName: unifi_ipmanager
+    helmfileRepoName: helmfileconfig
