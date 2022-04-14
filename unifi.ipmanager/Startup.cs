@@ -99,7 +99,7 @@ namespace unifi.ipmanager
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHealthChecks("/health", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
+            app.UseHealthChecks("/healthz", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
             app.UseOpenApi();
             app.UseAuthentication();
             app.UseCors();
