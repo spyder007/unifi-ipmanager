@@ -8,7 +8,7 @@ resources:
     - repository: helmfileconfig
       type: BitBucket
       endpoint: Bitbucket - spydersoft
-      name: spydersoftteam/helm-app-configuration
+      name: spydersoftteam/ha-helm-app-config
 
 variables:
   - group: helm-repository
