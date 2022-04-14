@@ -20,8 +20,7 @@ try
 
     builder.Host.UseSerilog((context, services, configuration) =>
     {
-        configuration
-        .ReadFrom.Configuration(context.Configuration);
+        configuration.ReadFrom.Configuration(context.Configuration);
     });
 
     var startup = new Startup(builder.Configuration);
