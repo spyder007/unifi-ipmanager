@@ -18,5 +18,7 @@ namespace unifi.ipmanager.Models.Unifi.Requests
         public string network_id { get; set; }
 
         public string fixed_ip { get; set; }
+
+        public string note { get; set; }
     }
 }

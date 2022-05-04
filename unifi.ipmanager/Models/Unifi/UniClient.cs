@@ -71,7 +71,7 @@ namespace unifi.ipmanager.Models.Unifi
         /// </summary>
         public string IpGroup { get; set; }
 
-        public UniNote NoteObject
+        public UniNote Notes
         {
             get
             {

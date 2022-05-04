@@ -12,5 +12,7 @@ namespace unifi.ipmanager.Models.Unifi.Requests
         public string note { get; set; }
 
         public string usergroup_id { get; set; }
+
+        public string hostname { get; set; }
     }
 }

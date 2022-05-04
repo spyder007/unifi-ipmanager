@@ -55,18 +55,26 @@ namespace unifi.ipmanager.Controllers
             return await IUnifyService.GetAllFixedClients();
         }
 
-        [HttpPost]
-        [Route("provision")]
-        public async Task<ActionResult<ServiceResult<UniClient>>> ProvisionClient([FromBody] ProvisionRequest request)
+        [HttpPut]
+        [Route("{mac}")]
+        public async Task<ActionResult<ServiceResult>> Put([FromRoute] string mac, [FromBody] EditClientRequest editRequest)
         {
-            return await IUnifyService.ProvisionNewClient(request.Group, request.Name, request.HostName, request.Static_ip, request.Sync_dns);
+            return await IUnifyService.UpdateClient(mac, editRequest);
         }
+
 
         [HttpDelete]
         [Route("{mac}")]
         public async Task<ActionResult<ServiceResult>> DeleteClient([FromRoute] string mac)
         {
             return await IUnifyService.DeleteClient(mac);
+        }
+
+        [HttpPost]
+        [Route("provision")]
+        public async Task<ActionResult<ServiceResult<UniClient>>> ProvisionClient([FromBody] ProvisionRequest request)
+        {
+            return await IUnifyService.ProvisionNewClient(request.Group, request.Name, request.HostName, request.Static_ip, request.Sync_dns);
         }
     }
 }
