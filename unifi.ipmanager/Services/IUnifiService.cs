@@ -14,6 +14,7 @@ namespace unifi.ipmanager.Services
 
         Task<ServiceResult<UniClient>> ProvisionNewClient(string group, string name, string hostName, bool staticIp, bool syncDns);
 
+        Task<ServiceResult<UniClient>> CreateClient(NewClientRequest editClientRequest);
         Task<ServiceResult> UpdateClient(string mac, EditClientRequest editClientRequest);
 
         Task<ServiceResult> DeleteClient(string mac);

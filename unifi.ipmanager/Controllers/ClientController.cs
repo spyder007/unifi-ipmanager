@@ -55,6 +55,12 @@ namespace unifi.ipmanager.Controllers
             return await IUnifyService.GetAllFixedClients();
         }
 
+        [HttpPost]
+        public async Task<ActionResult<ServiceResult<UniClient>>> Post([FromBody] NewClientRequest newRequest)
+        {
+            return await IUnifyService.CreateClient(newRequest);
+        }
+
         [HttpPut]
         [Route("{mac}")]
         public async Task<ActionResult<ServiceResult>> Put([FromRoute] string mac, [FromBody] EditClientRequest editRequest)

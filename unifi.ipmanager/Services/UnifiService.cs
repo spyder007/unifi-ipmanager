@@ -108,6 +108,56 @@ namespace unifi.ipmanager.Services
             return result;
         }
 
+        public async Task<ServiceResult<UniClient>> CreateClient(NewClientRequest clientRequest)
+        {
+            var result = new ServiceResult<UniClient>();
+
+            if (!await VerifyLogin())
+            {
+                result.MarkFailed("Login failed.");
+                return result;
+            }
+
+            var clientExistsResult = await ClientExists(clientRequest.MacAddress);
+
+            if (!clientExistsResult.Success)
+            {
+                result.MarkFailed("Create Failed");
+                return result;
+            }
+
+            if (clientExistsResult.Data)
+            {
+                result.MarkFailed($"Client with Mac Address {clientRequest.MacAddress} already exists.");
+            }
+            
+            var note = new UniNote()
+            {
+                Dns_hostname = clientRequest.Hostname,
+                Set_on_device = false,
+                Sync_dnshostname = clientRequest.SyncDns
+            };
+
+            var noteString = JsonConvert.SerializeObject(note, new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            });
+
+            var addRequest = new UnifiRequests.AddUniClientRequest
+            {
+                mac = clientRequest.MacAddress,
+                name = clientRequest.Name,
+                hostname = clientRequest.Hostname,
+                use_fixedip = true,
+                fixed_ip = clientRequest.IpAddress,
+                network_id = NetworkId,
+                note = noteString
+            };
+
+            return await ExecuteAddUniClientRequest(addRequest);
+        }
+
+
         public async Task<ServiceResult> UpdateClient(string mac, EditClientRequest editClientRequest)
         {
             var result = new ServiceResult();
@@ -237,37 +287,7 @@ namespace unifi.ipmanager.Services
                 }
             }
 
-            var addRequestString = JsonConvert.SerializeObject(addRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
-
-            var csrfToken = _cookieJar.FirstOrDefault(cookie => cookie.Name == "csrf_token");
-
-            Logger.LogDebug($"CSRF = {csrfToken.Value}");
-            Logger.LogDebug($"Payload String = {addRequestString}");
-            try
-            {
-                var addResult = await UnifiOptions.Url
-                    .AppendPathSegments("api", "s", SiteId, "rest", "user")
-                    .WithCookies(_cookieJar)
-                    .WithHeader("X-Csrf-Token", csrfToken.Value)
-                    .PostStringAsync(addRequestString)
-                    .ReceiveJson<UniResponse<List<UniClient>>>();
-
-                if (addResult.Meta.Rc == UniMeta.ErrorResponse)
-                {
-                    var error = $"Error adding client to {UnifiOptions.Url}: {addResult.Meta.Msg}";
-                    Logger.LogError(error);
-                    result.MarkFailed(error);
-                    return result;
-                }
-                result.MarkSuccessful(addResult.Data[0]);
-            }
-            catch (Exception e)
-            {
-                result.MarkFailed(e);
-                return result;
-            }
-
-            return result;
+            return await ExecuteAddUniClientRequest(addRequest);
         }
 
         public async Task<ServiceResult> DeleteClient(string mac)
@@ -321,6 +341,74 @@ namespace unifi.ipmanager.Services
         }
 
         #endregion IUnifiService Implementation
+
+        private async Task<ServiceResult<UniClient>> ExecuteAddUniClientRequest(UnifiRequests.AddUniClientRequest addRequest)
+        {
+            var result = new ServiceResult<UniClient>();
+
+            var addRequestString = JsonConvert.SerializeObject(addRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
+
+            var csrfToken = _cookieJar.FirstOrDefault(cookie => cookie.Name == "csrf_token");
+
+            Logger.LogDebug($"CSRF = {csrfToken.Value}");
+            Logger.LogDebug($"Payload String = {addRequestString}");
+            try
+            {
+                var addResult = await UnifiOptions.Url
+                    .AppendPathSegments("api", "s", SiteId, "rest", "user")
+                    .WithCookies(_cookieJar)
+                    .WithHeader("X-Csrf-Token", csrfToken.Value)
+                    .PostStringAsync(addRequestString)
+                    .ReceiveJson<UniResponse<List<UniClient>>>();
+
+                if (addResult.Meta.Rc == UniMeta.ErrorResponse)
+                {
+                    var error = $"Error adding client to {UnifiOptions.Url}: {addResult.Meta.Msg}";
+                    Logger.LogError(error);
+                    result.MarkFailed(error);
+                    return result;
+                }
+                result.MarkSuccessful(addResult.Data[0]);
+            }
+            catch (Exception e)
+            {
+                result.MarkFailed(e);
+                return result;
+            }
+            return result;
+        }
+
+        private async Task<ServiceResult<bool>> ClientExists(string mac)
+        {
+            var result = new ServiceResult<bool>();
+
+            if (!await VerifyLogin())
+            {
+                result.MarkFailed("Login failed.");
+                return result;
+            }
+
+            try
+            {
+                var data = await UnifiOptions.Url.AppendPathSegments("api", "s", SiteId, "rest", "user").SetQueryParam("mac", mac)
+                    .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
+
+                if (data.Meta.Rc == UniMeta.ErrorResponse)
+                {
+                    Logger.LogError($"Error retrieving client from {UnifiOptions.Url}: {data.Meta.Msg}");
+                }
+                else
+                {
+                    result.MarkSuccessful(data.Data.Count != 0);
+                }
+            }
+            catch (Exception e)
+            {
+                result.MarkFailed(e);
+            }
+
+            return result;
+        }
 
         private async Task<ServiceResult<UniClient>> GetClient(string mac)
         {
