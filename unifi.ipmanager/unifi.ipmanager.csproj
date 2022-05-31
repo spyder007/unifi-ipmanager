@@ -29,10 +29,10 @@
     <NoWarn>$(NoWarn);1591</NoWarn>
     <UserSecretsId>ef14f21a-dd83-4935-9e47-b96f3a80bf60</UserSecretsId>
   </PropertyGroup>
-
-	<PropertyGroup>
-		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-	</PropertyGroup>
-
-
+  
+  <Target Name="NSwag" AfterTargets="Build" Condition=" '$(Configuration)' == 'Debug' ">
+    <Copy SourceFiles="@(ReferencePath)" DestinationFolder="$(OutDir)References" />
+    <Exec Command="$(NSwagExe_Net50) run nswag.json /variables:Configuration=$(Configuration)" />
+    <RemoveDir Directories="$(OutDir)References" />
+  </Target>
 </Project>
