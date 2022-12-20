@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using unifi.ipmanager.Models.Unifi;
+﻿using unifi.ipmanager.Models.Unifi;
 
 namespace unifi.ipmanager.Models.DTO
 {

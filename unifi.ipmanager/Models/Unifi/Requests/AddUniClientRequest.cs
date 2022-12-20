@@ -1,24 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
 
 namespace unifi.ipmanager.Models.Unifi.Requests
 {
     public class AddUniClientRequest
     {
-        public string mac { get; set; }
+        [JsonProperty(PropertyName = "mac")]
+        public string Mac { get; set; }
 
-        public string name { get; set; }
+        [JsonProperty(PropertyName = "name")]
+        public string Name { get; set; }
 
-        public string hostname { get; set; }
+        [JsonProperty(PropertyName = "hostname")]
+        public string HostName { get; set; }
 
-        public bool use_fixedip { get; set; }
+        [JsonProperty(PropertyName = "use_fixedip")]
+        public bool UseFixedIp { get; set; }
 
-        public string network_id { get; set; }
+        [JsonProperty(PropertyName = "network_id")]
+        public string NetworkId { get; set; }
 
-        public string fixed_ip { get; set; }
+        [JsonProperty(PropertyName = "fixed_ip")]
+        public string FixedIp { get; set; }
 
-        public string note { get; set; }
+        [JsonProperty(PropertyName = "note")]
+        public string Note { get; set; }
+
     }
 }

@@ -18,7 +18,8 @@ namespace unifi.ipmanager.Models.Unifi
         /// Gets or sets the identifier.
         /// </summary>
         /// <value>The identifier.</value>
-        public string _id { get; set; }
+        [JsonProperty(PropertyName = "_id")]
+        public string Id { get; set; }
 
         /// <summary>
         /// Gets or sets the mac.
@@ -36,13 +37,15 @@ namespace unifi.ipmanager.Models.Unifi
         /// Gets or sets a value indicating whether [use fixedip].
         /// </summary>
         /// <value><c>true</c> if [use fixedip]; otherwise, <c>false</c>.</value>
-        public bool Use_fixedip { get; set; }
+        [JsonProperty(PropertyName = "Use_fixedip")]
+        public bool UsedFixedIp { get; set; }
 
         /// <summary>
         /// Gets or sets the fixed ip.
         /// </summary>
         /// <value>The fixed ip.</value>
-        public string Fixed_ip { get; set; }
+        [JsonProperty(PropertyName = "Fixed_ip")]
+        public string FixedIp { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether this <see cref="UniClient"/> is noted.
@@ -75,16 +78,12 @@ namespace unifi.ipmanager.Models.Unifi
         {
             get
             {
-                if (_note != null) return _note;
+                if (_note != null)
+                {
+                    return _note;
+                }
 
-                if (Noted && !string.IsNullOrWhiteSpace(Note))
-                {
-                    _note = JsonConvert.DeserializeObject<UniNote>(Note);
-                }
-                else
-                {
-                    _note = new UniNote();
-                }
+                _note = Noted && !string.IsNullOrWhiteSpace(Note) ? JsonConvert.DeserializeObject<UniNote>(Note) : new UniNote();
 
                 return _note;
             }

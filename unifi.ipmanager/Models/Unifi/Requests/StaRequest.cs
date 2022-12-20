@@ -1,14 +1,14 @@
-﻿using System;
+﻿using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace unifi.ipmanager.Models.Unifi.Requests
 {
     public class StaRequest
     {
-        public string cmd { get; set; }
+        [JsonProperty(PropertyName = "cmd")]
+        public string Cmd { get; set; }
 
-        public List<string> macs { get; set; }
+        [JsonProperty(PropertyName = "macs")]
+        public List<string> Macs { get; set; }
     }
 }

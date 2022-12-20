@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace unifi.ipmanager.Services
@@ -10,9 +7,9 @@ namespace unifi.ipmanager.Services
     {
         public static IServiceCollection AddUnifiService(this IServiceCollection collection)
         {
-            if (collection == null) throw new ArgumentNullException(nameof(collection));
-
-            return collection.AddTransient<UnifiService, UnifiService>();
+            return collection == null
+                ? throw new ArgumentNullException(nameof(collection))
+                : collection.AddTransient<UnifiService, UnifiService>();
         }
     }
 }

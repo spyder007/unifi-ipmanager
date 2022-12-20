@@ -25,7 +25,6 @@ namespace unifi.ipmanager.Services
         private IIpService IpService { get; }
         private UnifiControllerOptions UnifiOptions { get; }
         private ILogger Logger { get; }
-        
         private CookieJar _cookieJar;
 
         public UnifiService(IOptions<UnifiControllerOptions> options, IIpService ipService, ILogger<UnifiService> logger)
@@ -66,13 +65,13 @@ namespace unifi.ipmanager.Services
                         {
                             client.Name = client.Hostname;
                         }
-                        if (client.Use_fixedip)
+                        if (client.UsedFixedIp)
                         {
-                            client.IpGroup = IpService.GetIpGroupForAddress(client.Fixed_ip);
+                            client.IpGroup = IpService.GetIpGroupForAddress(client.FixedIp);
                         }
                     });
 
-                    allClients.AddRange(data.Data.Where(uc => uc.Use_fixedip));
+                    allClients.AddRange(data.Data.Where(uc => uc.UsedFixedIp));
                 }
             }
             catch (Exception e)
@@ -102,7 +101,7 @@ namespace unifi.ipmanager.Services
                 result.MarkFailed(e);
                 return result;
             }
-            
+
             result.MarkSuccessful(allClients);
 
             return result;
@@ -130,7 +129,7 @@ namespace unifi.ipmanager.Services
             {
                 result.MarkFailed($"Client with Mac Address {clientRequest.MacAddress} already exists.");
             }
-            
+
             var note = new UniNote()
             {
                 Dns_hostname = clientRequest.Hostname,
@@ -145,13 +144,13 @@ namespace unifi.ipmanager.Services
 
             var addRequest = new UnifiRequests.AddUniClientRequest
             {
-                mac = clientRequest.MacAddress,
-                name = clientRequest.Name,
-                hostname = clientRequest.Hostname,
-                use_fixedip = true,
-                fixed_ip = clientRequest.IpAddress,
-                network_id = NetworkId,
-                note = noteString
+                Mac = clientRequest.MacAddress,
+                Name = clientRequest.Name,
+                HostName = clientRequest.Hostname,
+                UseFixedIp = true,
+                FixedIp = clientRequest.IpAddress,
+                NetworkId = NetworkId,
+                Note = noteString
             };
 
             return await ExecuteAddUniClientRequest(addRequest);
@@ -178,8 +177,8 @@ namespace unifi.ipmanager.Services
 
             var editRequest = new UnifiRequests.EditUniClientRequest()
             {
-                name = editClientRequest.Name,
-                hostname = editClientRequest.Hostname
+                Name = editClientRequest.Name,
+                HostName = editClientRequest.Hostname
             };
 
             var updateNotes = new UniNote();
@@ -194,7 +193,7 @@ namespace unifi.ipmanager.Services
                 updateNotes = editClientRequest.Notes;
             }
 
-            editRequest.note = JsonConvert.SerializeObject(updateNotes, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
+            editRequest.Note = JsonConvert.SerializeObject(updateNotes, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
 
             var postRequestString = JsonConvert.SerializeObject(editRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
 
@@ -205,7 +204,7 @@ namespace unifi.ipmanager.Services
             try
             {
                 var noteResult = await UnifiOptions.Url
-                    .AppendPathSegments("api", "s", SiteId, "rest", "user", clientResult.Data._id)
+                    .AppendPathSegments("api", "s", SiteId, "rest", "user", clientResult.Data.Id)
                     .WithCookies(_cookieJar)
                     .WithHeader("X-Csrf-Token", csrfToken.Value)
                     .PutStringAsync(postRequestString)
@@ -270,20 +269,20 @@ namespace unifi.ipmanager.Services
 
             var addRequest = new UnifiRequests.AddUniClientRequest
             {
-                mac = macAddress,
-                name = name,
-                hostname = hostName,
-                use_fixedip = staticIp,
-                network_id = NetworkId,
-                note = noteString
+                Mac = macAddress,
+                Name = name,
+                HostName = hostName,
+                UseFixedIp = staticIp,
+                NetworkId = NetworkId,
+                Note = noteString
             };
 
             if (staticIp)
             {
-                var assignedIp = IpService.GetUnusedGroupIpAddress(group, clients.Select(c => c.Fixed_ip).ToList());
+                var assignedIp = IpService.GetUnusedGroupIpAddress(group, clients.Select(c => c.FixedIp).ToList());
                 if (!string.IsNullOrWhiteSpace(assignedIp))
                 {
-                    addRequest.fixed_ip = assignedIp;
+                    addRequest.FixedIp = assignedIp;
                 }
             }
 
@@ -299,11 +298,11 @@ namespace unifi.ipmanager.Services
                 result.MarkFailed("Login failed.");
                 return result;
             }
-            
+
             var postRequest = new UnifiRequests.StaRequest()
             {
-                cmd = "forget-sta",
-                macs = new List<string> { mac }
+                Cmd = "forget-sta",
+                Macs = new List<string> { mac }
             };
 
             var postRequestString = JsonConvert.SerializeObject(postRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
@@ -443,9 +442,9 @@ namespace unifi.ipmanager.Services
                             {
                                 client.Name = client.Hostname;
                             }
-                            if (client.Use_fixedip)
+                            if (client.UsedFixedIp)
                             {
-                                client.IpGroup = IpService.GetIpGroupForAddress(client.Fixed_ip);
+                                client.IpGroup = IpService.GetIpGroupForAddress(client.FixedIp);
                             }
                         });
                         result.MarkSuccessful(data.Data[0]);
@@ -489,11 +488,11 @@ namespace unifi.ipmanager.Services
                     {
                         devicesClients.Add(new UniClient
                         {
-                            _id = client._id,
-                            Fixed_ip = client.config_network.ip,
+                            Id = client._id,
+                            FixedIp = client.config_network.ip,
                             Name = client.name,
                             Mac = client.mac,
-                            Use_fixedip = true,
+                            UsedFixedIp = true,
                             ObjectType = "device",
                             IpGroup = IpService.GetIpGroupForAddress(client.config_network.ip)
                         });
@@ -545,21 +544,21 @@ namespace unifi.ipmanager.Services
         {
             var sBuilder = new StringBuilder();
             var r = new Random();
-            byte b;
-            sBuilder.Append("00:15:5D:");
+            //byte b;
+            _ = sBuilder.Append("00:15:5D:");
             for (int i = 0; i < 3; i++)
             {
                 var number = r.Next(0, 255);
-                b = Convert.ToByte(number);
+                //b = Convert.ToByte(number);
                 //if (i == 0)
                 //{
                 //    b = SetBit(b, 6); //--> set locally administered
                 //    b = UnsetBit(b, 7); // --> set unicast
                 //}
-                sBuilder.Append(number.ToString("X2"));
+                _ = sBuilder.Append(number.ToString("X2"));
                 if (i < 2)
                 {
-                    sBuilder.Append(":");
+                    _ = sBuilder.Append(":");
                 }
             }
             return sBuilder.ToString().ToUpper();
@@ -567,7 +566,7 @@ namespace unifi.ipmanager.Services
 
         private byte SetBit(byte b, int bitNumber)
         {
-            if (bitNumber < 8 && bitNumber > -1)
+            if (bitNumber is < 8 and > (-1))
             {
                 return (byte)(b | (byte)(0x01 << bitNumber));
             }
@@ -581,7 +580,7 @@ namespace unifi.ipmanager.Services
 
         private byte UnsetBit(byte b, int bitNumber)
         {
-            if (bitNumber < 8 && bitNumber > -1)
+            if (bitNumber is < 8 and > (-1))
             {
                 return (byte)(b | (byte)(0x00 << bitNumber));
             }

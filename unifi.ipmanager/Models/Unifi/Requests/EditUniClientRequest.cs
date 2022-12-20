@@ -1,18 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
 
 namespace unifi.ipmanager.Models.Unifi.Requests
 {
     public class EditUniClientRequest
     {
-        public string name { get; set; }
+        [JsonProperty(PropertyName = "name")]
+        public string Name { get; set; }
 
-        public string note { get; set; }
+        [JsonProperty(PropertyName = "note")]
+        public string Note { get; set; }
 
-        public string usergroup_id { get; set; }
+        [JsonProperty(PropertyName = "usergroup_id")]
+        public string UserGroupId { get; set; }
 
-        public string hostname { get; set; }
+        [JsonProperty(PropertyName = "hostname")]
+        public string HostName { get; set; }
     }
 }

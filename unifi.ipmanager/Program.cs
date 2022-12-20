@@ -16,11 +16,11 @@ try
 {
     Log.Information("unifi.ipmanager starting.");
     var builder = WebApplication.CreateBuilder(args);
-    var config = builder.Configuration;
+    _ = builder.Configuration;
 
-    builder.Host.UseSerilog((context, services, configuration) =>
+    _ = builder.Host.UseSerilog((context, services, configuration) =>
     {
-        configuration.ReadFrom.Configuration(context.Configuration);
+        _ = configuration.ReadFrom.Configuration(context.Configuration);
     });
 
     var startup = new Startup(builder.Configuration);

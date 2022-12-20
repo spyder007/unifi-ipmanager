@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using unifi.ipmanager.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -63,7 +60,6 @@ namespace unifi.ipmanager.Controllers
                 UnifiControllerOptions = UnifiControllerOptions,
                 Version = GetVersion()
             };
-            
 
             return info;
         }

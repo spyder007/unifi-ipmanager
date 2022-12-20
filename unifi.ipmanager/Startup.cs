@@ -8,11 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using Serilog;
-using Serilog.Sinks.SystemConsole.Themes;
 using unifi.ipmanager.Services;
 
 
@@ -28,8 +25,9 @@ namespace unifi.ipmanager
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<IConfiguration>(provider => Configuration);
-            services.AddApiVersioning(options =>
+#pragma warning disable IDE0058 // Expression value is never used
+            services.AddSingleton(() => Configuration)
+                .AddApiVersioning(options =>
             {
                 options.DefaultApiVersion = ApiVersion.Parse("1.0");
                 options.AssumeDefaultVersionWhenUnspecified = true;
@@ -39,8 +37,10 @@ namespace unifi.ipmanager
 
             });
 
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options => {
+                .AddJwtBearer(options =>
+                {
                     options.Authority = Configuration.GetValue<string>("Identity:AuthorityUrl");
                     options.Audience = Configuration.GetValue<string>("Identity:ApiName");
 
@@ -68,7 +68,6 @@ namespace unifi.ipmanager
                 doc.Description = "API Wrapper for the Unifi Controller";
                 doc.SerializerSettings = new JsonSerializerSettings
                 {
-                    
                     ContractResolver = new CamelCasePropertyNamesContractResolver()
                 };
             });
@@ -83,12 +82,13 @@ namespace unifi.ipmanager
                                 });
             });
             services.AddHealthChecks();
-
+#pragma warning restore IDE0058 // Expression value is never used
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+#pragma warning disable IDE0058 // Expression value is never used
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -103,7 +103,7 @@ namespace unifi.ipmanager
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
                 endpoints.MapControllers());
-
+#pragma warning restore IDE0058 // Expression value is never used
         }
     }
 }

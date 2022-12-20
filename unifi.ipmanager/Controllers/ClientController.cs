@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Flurl;
-using Flurl.Http;
-using unifi.ipmanager.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using unifi.ipmanager.Models.DTO;
 using unifi.ipmanager.Models.Unifi;
 using unifi.ipmanager.Services;
@@ -25,7 +18,7 @@ namespace unifi.ipmanager.Controllers
     [Authorize]
     public class ClientController : ControllerBase
     {
-        private ILogger<ClientController> _logger;
+        private readonly ILogger<ClientController> _logger;
 
         /// <summary>
         /// Gets or sets the options.
@@ -80,7 +73,7 @@ namespace unifi.ipmanager.Controllers
         [Route("provision")]
         public async Task<ActionResult<ServiceResult<UniClient>>> ProvisionClient([FromBody] ProvisionRequest request)
         {
-            return await IUnifyService.ProvisionNewClient(request.Group, request.Name, request.HostName, request.Static_ip, request.Sync_dns);
+            return await IUnifyService.ProvisionNewClient(request.Group, request.Name, request.HostName, request.StaticIp, request.SyncDns);
         }
     }
 }

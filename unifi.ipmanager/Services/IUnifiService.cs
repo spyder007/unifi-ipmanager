@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using unifi.ipmanager.Models;
 using unifi.ipmanager.Models.DTO;
 using unifi.ipmanager.Models.Unifi;
 

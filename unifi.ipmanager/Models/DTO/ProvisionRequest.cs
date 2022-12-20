@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
 
-namespace unifi.ipmanager.Models
+namespace unifi.ipmanager.Models.DTO
 {
     public class ProvisionRequest
     {
@@ -13,8 +10,10 @@ namespace unifi.ipmanager.Models
 
         public string HostName { get; set; }
 
-        public bool Static_ip { get; set; }
+        [JsonProperty(PropertyName = "Static_ip")]
+        public bool StaticIp { get; set; }
 
-        public bool Sync_dns { get; set; }
+        [JsonProperty(PropertyName = "Sync_dns")]
+        public bool SyncDns { get; set; }
     }
 }
