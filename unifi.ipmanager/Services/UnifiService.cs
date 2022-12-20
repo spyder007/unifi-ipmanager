@@ -107,7 +107,7 @@ namespace unifi.ipmanager.Services
             return result;
         }
 
-        public async Task<ServiceResult<UniClient>> CreateClient(NewClientRequest clientRequest)
+        public async Task<ServiceResult<UniClient>> CreateClient(NewClientRequest editClientRequest)
         {
             var result = new ServiceResult<UniClient>();
 
@@ -117,7 +117,7 @@ namespace unifi.ipmanager.Services
                 return result;
             }
 
-            var clientExistsResult = await ClientExists(clientRequest.MacAddress);
+            var clientExistsResult = await ClientExists(editClientRequest.MacAddress);
 
             if (!clientExistsResult.Success)
             {
@@ -127,14 +127,14 @@ namespace unifi.ipmanager.Services
 
             if (clientExistsResult.Data)
             {
-                result.MarkFailed($"Client with Mac Address {clientRequest.MacAddress} already exists.");
+                result.MarkFailed($"Client with Mac Address {editClientRequest.MacAddress} already exists.");
             }
 
             var note = new UniNote()
             {
-                Dns_hostname = clientRequest.Hostname,
+                Dns_hostname = editClientRequest.Hostname,
                 Set_on_device = false,
-                Sync_dnshostname = clientRequest.SyncDns
+                Sync_dnshostname = editClientRequest.SyncDns
             };
 
             var noteString = JsonConvert.SerializeObject(note, new JsonSerializerSettings
@@ -144,11 +144,11 @@ namespace unifi.ipmanager.Services
 
             var addRequest = new UnifiRequests.AddUniClientRequest
             {
-                Mac = clientRequest.MacAddress,
-                Name = clientRequest.Name,
-                HostName = clientRequest.Hostname,
+                Mac = editClientRequest.MacAddress,
+                Name = editClientRequest.Name,
+                HostName = editClientRequest.Hostname,
                 UseFixedIp = true,
-                FixedIp = clientRequest.IpAddress,
+                FixedIp = editClientRequest.IpAddress,
                 NetworkId = NetworkId,
                 Note = noteString
             };
@@ -199,36 +199,43 @@ namespace unifi.ipmanager.Services
 
             var csrfToken = _cookieJar.FirstOrDefault(cookie => cookie.Name == "csrf_token");
 
-            Logger.LogDebug($"CSRF = {csrfToken.Value}");
-            Logger.LogDebug($"Payload String = {postRequestString}");
-            try
+            if (csrfToken != null)
             {
-                var noteResult = await UnifiOptions.Url
-                    .AppendPathSegments("api", "s", SiteId, "rest", "user", clientResult.Data.Id)
-                    .WithCookies(_cookieJar)
-                    .WithHeader("X-Csrf-Token", csrfToken.Value)
-                    .PutStringAsync(postRequestString)
-                    .ReceiveJson<UniResponse<List<UniClient>>>();
+                Logger.LogDebug($"CSRF = {csrfToken.Value}");
+                Logger.LogDebug($"Payload String = {postRequestString}");
+                try
+                {
+                    var noteResult = await UnifiOptions.Url
+                        .AppendPathSegments("api", "s", SiteId, "rest", "user", clientResult.Data.Id)
+                        .WithCookies(_cookieJar)
+                        .WithHeader("X-Csrf-Token", csrfToken.Value)
+                        .PutStringAsync(postRequestString)
+                        .ReceiveJson<UniResponse<List<UniClient>>>();
 
-                if (noteResult.Meta.Rc == UniMeta.ErrorResponse)
-                {
-                    var error = $"Error updating client to {UnifiOptions.Url}: {noteResult.Meta.Msg}";
-                    Logger.LogError(error);
-                    result.MarkFailed(error);
+                    if (noteResult.Meta.Rc == UniMeta.ErrorResponse)
+                    {
+                        var error = $"Error updating client to {UnifiOptions.Url}: {noteResult.Meta.Msg}";
+                        Logger.LogError(error);
+                        result.MarkFailed(error);
+                    }
+                    else
+                    {
+                        result.MarkSuccessful();
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    result.MarkSuccessful();
+                    result.MarkFailed(e);
                 }
             }
-            catch (Exception e)
+            else
             {
-                result.MarkFailed(e);
+                Logger.LogDebug("CSRF Token is null");
+                result.MarkFailed("No CSRF Token Present");
             }
 
             return result;
         }
-
 
         public async Task<ServiceResult<UniClient>> ProvisionNewClient(string group, string name, string hostName, bool staticIp, bool syncDns)
         {
@@ -309,31 +316,39 @@ namespace unifi.ipmanager.Services
 
             var csrfToken = _cookieJar.FirstOrDefault(cookie => cookie.Name == "csrf_token");
 
-            Logger.LogDebug($"CSRF = {csrfToken.Value}");
-            Logger.LogDebug($"Payload String = {postRequestString}");
-            try
+            if (csrfToken != null)
             {
-                var noteResult = await UnifiOptions.Url
-                    .AppendPathSegments("api", "s", SiteId, "cmd", "stamgr")
-                    .WithCookies(_cookieJar)
-                    .WithHeader("X-Csrf-Token", csrfToken.Value)
-                    .PostStringAsync(postRequestString)
-                    .ReceiveJson<UniResponse<List<UniClient>>>();
+                Logger.LogDebug($"CSRF = {csrfToken.Value}");
+                Logger.LogDebug($"Payload String = {postRequestString}");
+                try
+                {
+                    var noteResult = await UnifiOptions.Url
+                        .AppendPathSegments("api", "s", SiteId, "cmd", "stamgr")
+                        .WithCookies(_cookieJar)
+                        .WithHeader("X-Csrf-Token", csrfToken.Value)
+                        .PostStringAsync(postRequestString)
+                        .ReceiveJson<UniResponse<List<UniClient>>>();
 
-                if (noteResult.Meta.Rc == UniMeta.ErrorResponse)
-                {
-                    var error = $"Error deleting editClientRequest : {noteResult.Meta.Msg}";
-                    Logger.LogError(error);
-                    result.MarkFailed(error);
+                    if (noteResult.Meta.Rc == UniMeta.ErrorResponse)
+                    {
+                        var error = $"Error deleting editClientRequest : {noteResult.Meta.Msg}";
+                        Logger.LogError(error);
+                        result.MarkFailed(error);
+                    }
+                    else
+                    {
+                        result.MarkSuccessful();
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    result.MarkSuccessful();
+                    result.MarkFailed(e);
                 }
             }
-            catch (Exception e)
+            else
             {
-                result.MarkFailed(e);
+                Logger.LogDebug("CSRF Token is null");
+                result.MarkFailed("No CSRF Token Present");
             }
 
             return result;
@@ -349,31 +364,41 @@ namespace unifi.ipmanager.Services
 
             var csrfToken = _cookieJar.FirstOrDefault(cookie => cookie.Name == "csrf_token");
 
-            Logger.LogDebug($"CSRF = {csrfToken.Value}");
-            Logger.LogDebug($"Payload String = {addRequestString}");
-            try
+            if (csrfToken != null)
             {
-                var addResult = await UnifiOptions.Url
-                    .AppendPathSegments("api", "s", SiteId, "rest", "user")
-                    .WithCookies(_cookieJar)
-                    .WithHeader("X-Csrf-Token", csrfToken.Value)
-                    .PostStringAsync(addRequestString)
-                    .ReceiveJson<UniResponse<List<UniClient>>>();
-
-                if (addResult.Meta.Rc == UniMeta.ErrorResponse)
+                Logger.LogDebug($"CSRF = {csrfToken.Value}");
+                Logger.LogDebug($"Payload String = {addRequestString}");
+                try
                 {
-                    var error = $"Error adding client to {UnifiOptions.Url}: {addResult.Meta.Msg}";
-                    Logger.LogError(error);
-                    result.MarkFailed(error);
+                    var addResult = await UnifiOptions.Url
+                        .AppendPathSegments("api", "s", SiteId, "rest", "user")
+                        .WithCookies(_cookieJar)
+                        .WithHeader("X-Csrf-Token", csrfToken.Value)
+                        .PostStringAsync(addRequestString)
+                        .ReceiveJson<UniResponse<List<UniClient>>>();
+
+                    if (addResult.Meta.Rc == UniMeta.ErrorResponse)
+                    {
+                        var error = $"Error adding client to {UnifiOptions.Url}: {addResult.Meta.Msg}";
+                        Logger.LogError(error);
+                        result.MarkFailed(error);
+                        return result;
+                    }
+
+                    result.MarkSuccessful(addResult.Data[0]);
+                }
+                catch (Exception e)
+                {
+                    result.MarkFailed(e);
                     return result;
                 }
-                result.MarkSuccessful(addResult.Data[0]);
             }
-            catch (Exception e)
+            else
             {
-                result.MarkFailed(e);
-                return result;
+                Logger.LogDebug("CSRF Token is null");
+                result.MarkFailed("No CSRF Token Present");
             }
+
             return result;
         }
 
@@ -522,7 +547,7 @@ namespace unifi.ipmanager.Services
 
                 try
                 {
-                    var response = await UnifiOptions.Url.AppendPathSegments("api", "login").WithCookies(out _cookieJar).PostJsonAsync(credentials).ReceiveJson<UniResponse<List<string>>>();
+                    _ = await UnifiOptions.Url.AppendPathSegments("api", "login").WithCookies(out _cookieJar).PostJsonAsync(credentials).ReceiveJson<UniResponse<List<string>>>();
                 }
                 catch (FlurlHttpException ex)
                 {

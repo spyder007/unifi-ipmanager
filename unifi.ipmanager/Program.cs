@@ -16,9 +16,8 @@ try
 {
     Log.Information("unifi.ipmanager starting.");
     var builder = WebApplication.CreateBuilder(args);
-    _ = builder.Configuration;
-
-    _ = builder.Host.UseSerilog((context, services, configuration) =>
+    
+    builder.Host.UseSerilog((context, services, configuration) =>
     {
         _ = configuration.ReadFrom.Configuration(context.Configuration);
     });
