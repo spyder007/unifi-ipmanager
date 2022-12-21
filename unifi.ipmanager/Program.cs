@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Serilog;
-using System;
 using unifi.ipmanager;
 
 var baseConfig = new ConfigurationBuilder()
@@ -16,8 +16,8 @@ try
 {
     Log.Information("unifi.ipmanager starting.");
     var builder = WebApplication.CreateBuilder(args);
-    
-    builder.Host.UseSerilog((context, services, configuration) =>
+
+    _ = builder.Host.UseSerilog((context, services, configuration) =>
     {
         _ = configuration.ReadFrom.Configuration(context.Configuration);
     });
