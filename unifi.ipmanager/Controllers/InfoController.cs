@@ -12,9 +12,9 @@ namespace unifi.ipmanager.Controllers
 {
     /// <summary>
     /// Class InfoController.
-    /// Implements the <see cref="Microsoft.AspNetCore.Mvc.ControllerBase" />
+    /// Implements the <see cref="ControllerBase" />
     /// </summary>
-    /// <seealso cref="Microsoft.AspNetCore.Mvc.ControllerBase" />
+    /// <seealso cref="ControllerBase" />
     [ApiVersion("1.0")]
     [Route("[controller]")]
     [Authorize()]
