@@ -1,0 +1,28 @@
+{
+  "name": "unifi.ipmanager",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "dotnet test",
+    "prepare": "husky install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/spydersoftteam/unifi.ipmanager.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://bitbucket.org/spydersoftteam/unifi.ipmanager/issues"
+  },
+  "homepage": "https://bitbucket.org/spydersoftteam/unifi.ipmanager#readme",
+  "devDependencies": {
+    "husky": "^8.0.0",
+    "lint-staged": "^13.1.0"
+  },
+  "lint-staged": {
+    "*.cs": "dotnet format --include"
+  }
+}
