@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace unifi.ipmanager.Models.Unifi
 {
@@ -19,6 +20,7 @@ namespace unifi.ipmanager.Models.Unifi
         /// </summary>
         /// <value>The identifier.</value>
         [JsonProperty(PropertyName = "_id")]
+        [JsonPropertyName("_id")]
         public string Id { get; set; }
 
         /// <summary>
@@ -38,6 +40,7 @@ namespace unifi.ipmanager.Models.Unifi
         /// </summary>
         /// <value><c>true</c> if [use fixedip]; otherwise, <c>false</c>.</value>
         [JsonProperty(PropertyName = "use_fixedip")]
+        [JsonPropertyName("use_fixedip")]
         public bool UsedFixedIp { get; set; }
 
         /// <summary>
@@ -45,6 +48,7 @@ namespace unifi.ipmanager.Models.Unifi
         /// </summary>
         /// <value>The fixed ip.</value>
         [JsonProperty(PropertyName = "fixed_ip")]
+        [JsonPropertyName("fixed_ip")]
         public string FixedIp { get; set; }
 
         /// <summary>
