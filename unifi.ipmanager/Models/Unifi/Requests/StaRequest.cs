@@ -6,11 +6,11 @@ namespace unifi.ipmanager.Models.Unifi.Requests
 {
     public class StaRequest
     {
-        [JsonProperty(PropertyName = "cmd")]
+        [JsonProperty("cmd")]
         [JsonPropertyName("cmd")]
         public string Cmd { get; set; }
 
-        [JsonProperty(PropertyName = "macs")]
+        [JsonProperty("macs")]
         [JsonPropertyName("macs")]
         public List<string> Macs { get; set; }
     }

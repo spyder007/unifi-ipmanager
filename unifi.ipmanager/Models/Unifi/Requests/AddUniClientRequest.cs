@@ -5,31 +5,31 @@ namespace unifi.ipmanager.Models.Unifi.Requests
 {
     public class AddUniClientRequest
     {
-        [JsonProperty(PropertyName = "mac")]
+        [JsonProperty("mac")]
         [JsonPropertyName("mac")]
         public string Mac { get; set; }
 
-        [JsonProperty(PropertyName = "name")]
+        [JsonProperty("name")]
         [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty(PropertyName = "hostname")]
+        [JsonProperty("hostname")]
         [JsonPropertyName("hostname")]
         public string HostName { get; set; }
 
-        [JsonProperty(PropertyName = "use_fixedip")]
+        [JsonProperty("use_fixedip")]
         [JsonPropertyName("use_fixedip")]
         public bool UseFixedIp { get; set; }
 
-        [JsonProperty(PropertyName = "network_id")]
+        [JsonProperty("network_id")]
         [JsonPropertyName("network_id")]
         public string NetworkId { get; set; }
 
-        [JsonProperty(PropertyName = "fixed_ip")]
+        [JsonProperty("fixed_ip")]
         [JsonPropertyName("fixed_ip")]
         public string FixedIp { get; set; }
 
-        [JsonProperty(PropertyName = "note")]
+        [JsonProperty("note")]
         [JsonPropertyName("note")]
         public string Note { get; set; }
 

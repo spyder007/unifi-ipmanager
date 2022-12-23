@@ -34,7 +34,7 @@ Release.msproj
 *.nupkg
 **/.vscode/
 launchSettings.json
-
+**/TestResults/*
 **/node_modules
 
 output

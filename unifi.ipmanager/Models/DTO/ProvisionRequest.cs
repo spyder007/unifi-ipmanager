@@ -11,12 +11,12 @@ namespace unifi.ipmanager.Models.DTO
 
         public string HostName { get; set; }
 
-        [JsonProperty(PropertyName = "Static_ip")]
+        [JsonProperty("Static_ip")]
         [JsonPropertyName("Static_ip")]
         public bool StaticIp { get; set; }
 
         [JsonPropertyName("Sync_dns")]
-        [JsonProperty(PropertyName = "Sync_dns")]
+        [JsonProperty("Sync_dns")]
         public bool SyncDns { get; set; }
     }
 }

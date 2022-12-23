@@ -19,7 +19,7 @@ namespace unifi.ipmanager.Models.Unifi
         /// Gets or sets the identifier.
         /// </summary>
         /// <value>The identifier.</value>
-        [JsonProperty(PropertyName = "_id")]
+        [JsonProperty("_id")]
         [JsonPropertyName("_id")]
         public string Id { get; set; }
 
@@ -39,15 +39,15 @@ namespace unifi.ipmanager.Models.Unifi
         /// Gets or sets a value indicating whether [use fixedip].
         /// </summary>
         /// <value><c>true</c> if [use fixedip]; otherwise, <c>false</c>.</value>
-        [JsonProperty(PropertyName = "use_fixedip")]
+        [JsonProperty("use_fixedip")]
         [JsonPropertyName("use_fixedip")]
-        public bool UsedFixedIp { get; set; }
+        public bool UseFixedIp { get; set; }
 
         /// <summary>
         /// Gets or sets the fixed ip.
         /// </summary>
         /// <value>The fixed ip.</value>
-        [JsonProperty(PropertyName = "fixed_ip")]
+        [JsonProperty("fixed_ip")]
         [JsonPropertyName("fixed_ip")]
         public string FixedIp { get; set; }
 

@@ -65,13 +65,13 @@ namespace unifi.ipmanager.Services
                         {
                             client.Name = client.Hostname;
                         }
-                        if (client.UsedFixedIp)
+                        if (client.UseFixedIp)
                         {
                             client.IpGroup = IpService.GetIpGroupForAddress(client.FixedIp);
                         }
                     });
 
-                    allClients.AddRange(data.Data.Where(uc => uc.UsedFixedIp));
+                    allClients.AddRange(data.Data.Where(uc => uc.UseFixedIp));
                 }
             }
             catch (Exception e)
@@ -467,7 +467,7 @@ namespace unifi.ipmanager.Services
                             {
                                 client.Name = client.Hostname;
                             }
-                            if (client.UsedFixedIp)
+                            if (client.UseFixedIp)
                             {
                                 client.IpGroup = IpService.GetIpGroupForAddress(client.FixedIp);
                             }
@@ -517,7 +517,7 @@ namespace unifi.ipmanager.Services
                             FixedIp = client.config_network.ip,
                             Name = client.name,
                             Mac = client.mac,
-                            UsedFixedIp = true,
+                            UseFixedIp = true,
                             ObjectType = "device",
                             IpGroup = IpService.GetIpGroupForAddress(client.config_network.ip)
                         });
