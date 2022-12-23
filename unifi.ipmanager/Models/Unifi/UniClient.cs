@@ -37,14 +37,14 @@ namespace unifi.ipmanager.Models.Unifi
         /// Gets or sets a value indicating whether [use fixedip].
         /// </summary>
         /// <value><c>true</c> if [use fixedip]; otherwise, <c>false</c>.</value>
-        [JsonProperty(PropertyName = "Use_fixedip")]
+        [JsonProperty(PropertyName = "use_fixedip")]
         public bool UsedFixedIp { get; set; }
 
         /// <summary>
         /// Gets or sets the fixed ip.
         /// </summary>
         /// <value>The fixed ip.</value>
-        [JsonProperty(PropertyName = "Fixed_ip")]
+        [JsonProperty(PropertyName = "fixed_ip")]
         public string FixedIp { get; set; }
 
         /// <summary>
