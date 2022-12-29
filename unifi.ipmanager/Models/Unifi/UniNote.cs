@@ -1,27 +1,37 @@
-﻿namespace unifi.ipmanager.Models.Unifi
+﻿using Newtonsoft.Json;
+using System.Text.Json.Serialization;
+
+namespace unifi.ipmanager.Models.Unifi
 {
     public class UniNote
     {
-        public bool? Set_on_device { get; set; }
-        public string Dns_hostname { get; set; }
+        [JsonProperty("set_on_device")]
+        [JsonPropertyName("set_on_device")]
+        public bool? SetOnDevice { get; set; }
 
-        public bool? Sync_dnshostname { get; set; }
+        [JsonProperty("dns_hostname")]
+        [JsonPropertyName("dns_hostname")]
+        public string DnsHostname { get; set; }
+
+        [JsonProperty("sync_dnshostname")]
+        [JsonPropertyName("sync_dnshostname")]
+        public bool? SyncDnsHostName { get; set; }
 
         public void Update(UniNote notes)
         {
-            if (notes?.Set_on_device != null)
+            if (notes?.SetOnDevice != null)
             {
-                Set_on_device = notes.Set_on_device;
+                SetOnDevice = notes.SetOnDevice;
             }
 
-            if (notes?.Sync_dnshostname != null)
+            if (notes?.SyncDnsHostName != null)
             {
-                Sync_dnshostname = notes.Sync_dnshostname;
+                SyncDnsHostName = notes.SyncDnsHostName;
             }
 
-            if (notes?.Dns_hostname != null)
+            if (notes?.DnsHostname != null)
             {
-                Dns_hostname = notes.Dns_hostname;
+                DnsHostname = notes.DnsHostname;
             }
         }
     }

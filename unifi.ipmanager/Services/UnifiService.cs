@@ -55,7 +55,7 @@ namespace unifi.ipmanager.Services
 
                 if (data.Meta.Rc == UniMeta.ErrorResponse)
                 {
-                    Logger.LogError($"Error retrieving clients from {UnifiOptions.Url}: {data.Meta.Msg}");
+                    Logger.LogError("Error retrieving clients from {url}: {message}", UnifiOptions.Url, data.Meta.Msg);
                 }
                 else
                 {
@@ -132,9 +132,9 @@ namespace unifi.ipmanager.Services
 
             var note = new UniNote()
             {
-                Dns_hostname = editClientRequest.Hostname,
-                Set_on_device = false,
-                Sync_dnshostname = editClientRequest.SyncDns
+                DnsHostname = editClientRequest.Hostname,
+                SetOnDevice = false,
+                SyncDnsHostName = editClientRequest.SyncDns
             };
 
             var noteString = JsonConvert.SerializeObject(note, new JsonSerializerSettings
@@ -201,8 +201,8 @@ namespace unifi.ipmanager.Services
 
             if (csrfToken != null)
             {
-                Logger.LogDebug($"CSRF = {csrfToken.Value}");
-                Logger.LogDebug($"Payload String = {postRequestString}");
+                Logger.LogDebug("CSRF = {csrf}", csrfToken.Value);
+                Logger.LogDebug("Payload String = {payload}", postRequestString);
                 try
                 {
                     var noteResult = await UnifiOptions.Url
@@ -214,9 +214,8 @@ namespace unifi.ipmanager.Services
 
                     if (noteResult.Meta.Rc == UniMeta.ErrorResponse)
                     {
-                        var error = $"Error updating client to {UnifiOptions.Url}: {noteResult.Meta.Msg}";
-                        Logger.LogError(error);
-                        result.MarkFailed(error);
+                        Logger.LogError("Error updating client to {url}: {message}", UnifiOptions.Url, noteResult.Meta.Msg);
+                        result.MarkFailed($"Error updating client to {UnifiOptions.Url}: {noteResult.Meta.Msg}");
                     }
                     else
                     {
@@ -264,9 +263,9 @@ namespace unifi.ipmanager.Services
 
             var note = new UniNote()
             {
-                Dns_hostname = hostName,
-                Set_on_device = false,
-                Sync_dnshostname = syncDns
+                DnsHostname = hostName,
+                SetOnDevice = false,
+                SyncDnsHostName = syncDns
             };
 
             var noteString = JsonConvert.SerializeObject(note, new JsonSerializerSettings
@@ -318,8 +317,8 @@ namespace unifi.ipmanager.Services
 
             if (csrfToken != null)
             {
-                Logger.LogDebug($"CSRF = {csrfToken.Value}");
-                Logger.LogDebug($"Payload String = {postRequestString}");
+                Logger.LogDebug("CSRF = {csrf}", csrfToken.Value);
+                Logger.LogDebug("Payload String = {payload}", postRequestString);
                 try
                 {
                     var noteResult = await UnifiOptions.Url
@@ -331,9 +330,8 @@ namespace unifi.ipmanager.Services
 
                     if (noteResult.Meta.Rc == UniMeta.ErrorResponse)
                     {
-                        var error = $"Error deleting editClientRequest : {noteResult.Meta.Msg}";
-                        Logger.LogError(error);
-                        result.MarkFailed(error);
+                        Logger.LogError("Error deleting editClientRequest : {message}", noteResult.Meta.Msg);
+                        result.MarkFailed($"Error deleting editClientRequest : {noteResult.Meta.Msg}");
                     }
                     else
                     {
@@ -366,8 +364,8 @@ namespace unifi.ipmanager.Services
 
             if (csrfToken != null)
             {
-                Logger.LogDebug($"CSRF = {csrfToken.Value}");
-                Logger.LogDebug($"Payload String = {addRequestString}");
+                Logger.LogDebug("CSRF = {csrf}", csrfToken.Value);
+                Logger.LogDebug("Payload String = {payload}", addRequestString);
                 try
                 {
                     var addResult = await UnifiOptions.Url
@@ -379,9 +377,8 @@ namespace unifi.ipmanager.Services
 
                     if (addResult.Meta.Rc == UniMeta.ErrorResponse)
                     {
-                        var error = $"Error adding client to {UnifiOptions.Url}: {addResult.Meta.Msg}";
-                        Logger.LogError(error);
-                        result.MarkFailed(error);
+                        Logger.LogError("Error adding client to {url}: {message}", UnifiOptions.Url, addResult.Meta.Msg);
+                        result.MarkFailed($"Error adding client to {UnifiOptions.Url}: {addResult.Meta.Msg}");
                         return result;
                     }
 
@@ -419,7 +416,7 @@ namespace unifi.ipmanager.Services
 
                 if (data.Meta.Rc == UniMeta.ErrorResponse)
                 {
-                    Logger.LogError($"Error retrieving client from {UnifiOptions.Url}: {data.Meta.Msg}");
+                    Logger.LogError("Error retrieving client from {url}: {message}", UnifiOptions.Url, data.Meta.Msg);
                 }
                 else
                 {
@@ -451,7 +448,7 @@ namespace unifi.ipmanager.Services
 
                 if (data.Meta.Rc == UniMeta.ErrorResponse)
                 {
-                    Logger.LogError($"Error retrieving client from {UnifiOptions.Url}: {data.Meta.Msg}");
+                    Logger.LogError("Error retrieving client from {url}: {message}", UnifiOptions.Url, data.Meta.Msg);
                 }
                 else
                 {
@@ -503,9 +500,9 @@ namespace unifi.ipmanager.Services
 
                 if (data.meta.rc == UniMeta.ErrorResponse)
                 {
-                    var error = $"Error retrieving clients from {UnifiOptions.Url}: {data.Meta.Msg}";
-                    Logger.LogError(error);
-                    result.MarkFailed(error);
+                    string message = data.Meta.Msg;
+                    Logger.LogError("Error retrieving clients from {url}: {message}", UnifiOptions.Url, message);
+                    result.MarkFailed($"Error retrieving clients from {UnifiOptions.Url}: {data.Meta.Msg}");
                 }
                 else
                 {
@@ -554,10 +551,10 @@ namespace unifi.ipmanager.Services
                     var errorResponse = await ex.GetResponseJsonAsync<UniResponse<List<string>>>();
                     if (errorResponse.Meta.Rc == UniMeta.ErrorResponse)
                     {
-                        Logger.LogError($"Error logging on to ${UnifiOptions.Url}: {errorResponse.Meta.Msg}");
+                        Logger.LogError("Error logging on to {url}: {message}", UnifiOptions.Url, errorResponse.Meta.Msg);
                         return false;
                     }
-                    Logger.LogDebug($"Error Logging in:0 URL - {UnifiOptions.Url}, UserName - {UnifiOptions.Username}, {UnifiOptions.Password}");
+                    Logger.LogDebug("Error Logging in: URL - {url}, UserName - {username}, {password}", UnifiOptions.Url, UnifiOptions.Username, UnifiOptions.Password);
                     Logger.LogError(ex, "Error logging in to Unifi Controller");
                     return false;
                 }
@@ -565,7 +562,7 @@ namespace unifi.ipmanager.Services
             return true;
         }
 
-        private string GenerateMacAddress()
+        private static string GenerateMacAddress()
         {
             var sBuilder = new StringBuilder();
             var r = new Random();
@@ -576,39 +573,10 @@ namespace unifi.ipmanager.Services
                 _ = sBuilder.Append(number.ToString("X2"));
                 if (i < 2)
                 {
-                    _ = sBuilder.Append(":");
+                    _ = sBuilder.Append(':');
                 }
             }
             return sBuilder.ToString().ToUpper();
-        }
-
-        private byte SetBit(byte b, int bitNumber)
-        {
-            if (bitNumber is < 8 and > (-1))
-            {
-                return (byte)(b | (byte)(0x01 << bitNumber));
-            }
-            else
-            {
-                Logger.LogError(new InvalidOperationException(
-                    $"The value for {bitNumber} was not in the proper range (BitNumber = (min)0 - (max)7)"), "Error setting bit");
-            }
-            return default;
-        }
-
-        private byte UnsetBit(byte b, int bitNumber)
-        {
-            if (bitNumber is < 8 and > (-1))
-            {
-                return (byte)(b | (byte)(0x00 << bitNumber));
-            }
-            else
-            {
-                Logger.LogError(new InvalidOperationException(
-                    $"The value for {bitNumber} was not in the proper range (BitNumber = (min)0 - (max)7)"), "Error unsetting bit");
-            }
-
-            return default;
         }
     }
 }

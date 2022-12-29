@@ -33,10 +33,13 @@ namespace unifi.ipmanager.tests
 
             var result = controller.Get();
 
-            Assert.That(result.Value, Is.Not.Null);
-            Assert.That(result.Value?.UnifiControllerOptions.Url, Is.EqualTo(_testOptions?.Url));
-            Assert.That(result.Value?.UnifiControllerOptions.Username, Is.EqualTo(_testOptions?.Username));
-            Assert.That(result.Value?.UnifiControllerOptions.Password, Is.EqualTo(_testOptions?.Password));
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Value, Is.Not.Null);
+                Assert.That(result.Value?.UnifiControllerOptions.Url, Is.EqualTo(_testOptions?.Url));
+                Assert.That(result.Value?.UnifiControllerOptions.Username, Is.EqualTo(_testOptions?.Username));
+                Assert.That(result.Value?.UnifiControllerOptions.Password, Is.EqualTo(_testOptions?.Password));
+            });
         }
     }
 }
