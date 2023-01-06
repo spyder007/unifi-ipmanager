@@ -34,5 +34,6 @@ extends:
     helmfileRepoName: helmfileconfig
     execute_sonar: ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') }}
     sonar_endpoint_name: sonarqube
+    sonar_project_name: unifi.ipmanager
     sonar_project_key: Home_Automation_Home_Automation_AYV-PxRymblgg6j_jAeI
     execute_tests: true
