@@ -45,7 +45,7 @@ namespace unifi.ipmanager.Services
                     }
                 }
             }
-            Logger.LogWarning($"No open IPs found for {ipGroup.Name}");
+            Logger.LogWarning("No open IPs found for {groupName}", ipGroup.Name);
             return string.Empty;
         }
 

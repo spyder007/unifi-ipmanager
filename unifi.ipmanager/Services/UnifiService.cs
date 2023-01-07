@@ -50,34 +50,12 @@ namespace unifi.ipmanager.Services
 
             try
             {
-                var data = await UnifiOptions.Url.AppendPathSegments("api", "s", SiteId, "stat", "alluser")
-                    .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
-
-                if (data.Meta.Rc == UniMeta.ErrorResponse)
-                {
-                    Logger.LogError("Error retrieving clients from {url}: {message}", UnifiOptions.Url, data.Meta.Msg);
-                }
-                else
-                {
-                    data.Data.ForEach(client =>
-                    {
-                        if (string.IsNullOrWhiteSpace(client.Name))
-                        {
-                            client.Name = client.Hostname;
-                        }
-                        if (client.UseFixedIp)
-                        {
-                            client.IpGroup = IpService.GetIpGroupForAddress(client.FixedIp);
-                        }
-                    });
-
-                    allClients.AddRange(data.Data.Where(uc => uc.UseFixedIp));
-                }
+                var fixedClients = await GetAllFixedIpClients();
+                allClients.AddRange(fixedClients);
             }
             catch (Exception e)
             {
                 result.MarkFailed(e);
-                return result;
             }
 
             try
@@ -105,6 +83,34 @@ namespace unifi.ipmanager.Services
             result.MarkSuccessful(allClients);
 
             return result;
+        }
+
+        private async Task<IEnumerable<UniClient>> GetAllFixedIpClients()
+        {
+            var data = await UnifiOptions.Url.AppendPathSegments("api", "s", SiteId, "stat", "alluser")
+                .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
+
+            if (data.Meta.Rc == UniMeta.ErrorResponse)
+            {
+                Logger.LogError("Error retrieving clients from {url}: {message}", UnifiOptions.Url, data.Meta.Msg);
+                return new List<UniClient>();
+            }
+            else
+            {
+                data.Data.ForEach(client =>
+                {
+                    if (string.IsNullOrWhiteSpace(client.Name))
+                    {
+                        client.Name = client.Hostname;
+                    }
+
+                    if (client.UseFixedIp)
+                    {
+                        client.IpGroup = IpService.GetIpGroupForAddress(client.FixedIp);
+                    }
+                });
+                return data.Data.Where(uc => uc.UseFixedIp);
+            }
         }
 
         public async Task<ServiceResult<UniClient>> CreateClient(NewClientRequest editClientRequest)

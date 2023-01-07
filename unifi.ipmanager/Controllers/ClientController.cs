@@ -45,12 +45,14 @@ namespace unifi.ipmanager.Controllers
         [HttpGet]
         public async Task<ActionResult<ServiceResult<List<UniClient>>>> Get()
         {
+            _logger.LogInformation("Processing client list request.");
             return await IUnifyService.GetAllFixedClients();
         }
 
         [HttpPost]
         public async Task<ActionResult<ServiceResult<UniClient>>> Post([FromBody] NewClientRequest newRequest)
         {
+            _logger.LogInformation("Processing create client request.");
             return await IUnifyService.CreateClient(newRequest);
         }
 
@@ -58,6 +60,7 @@ namespace unifi.ipmanager.Controllers
         [Route("{mac}")]
         public async Task<ActionResult<ServiceResult>> Put([FromRoute] string mac, [FromBody] EditClientRequest editRequest)
         {
+            _logger.LogInformation("Processing client update request.");
             return await IUnifyService.UpdateClient(mac, editRequest);
         }
 
@@ -66,6 +69,7 @@ namespace unifi.ipmanager.Controllers
         [Route("{mac}")]
         public async Task<ActionResult<ServiceResult>> DeleteClient([FromRoute] string mac)
         {
+            _logger.LogInformation("Processing client delete request.");
             return await IUnifyService.DeleteClient(mac);
         }
 
@@ -73,6 +77,7 @@ namespace unifi.ipmanager.Controllers
         [Route("provision")]
         public async Task<ActionResult<ServiceResult<UniClient>>> ProvisionClient([FromBody] ProvisionRequest request)
         {
+            _logger.LogInformation("Processing provision client request.");
             return await IUnifyService.ProvisionNewClient(request.Group, request.Name, request.HostName, request.StaticIp, request.SyncDns);
         }
     }
