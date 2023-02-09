@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 
-namespace unifi.ipmanager.Models
+namespace unifi.ipmanager.Options
 {
     public class IpOptions
     {
+        public const string SectionName = "IpOptions";
         public List<IpGroup> IpGroups { get; set; }
     }
 

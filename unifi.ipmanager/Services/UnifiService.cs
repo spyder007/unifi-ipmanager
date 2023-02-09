@@ -9,11 +9,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Serialization;
-using unifi.ipmanager.Models;
 using unifi.ipmanager.Models.DTO;
 using unifi.ipmanager.Models.Unifi;
 using NullValueHandling = Newtonsoft.Json.NullValueHandling;
 using UnifiRequests = unifi.ipmanager.Models.Unifi.Requests;
+using unifi.ipmanager.Options;
 
 namespace unifi.ipmanager.Services
 {
@@ -23,15 +23,18 @@ namespace unifi.ipmanager.Services
         private const string NetworkId = "59f62826e4b0c5498bc2a82e";
 
         private IIpService IpService { get; }
+        private IDnsService DnsService { get; }
+
         private UnifiControllerOptions UnifiOptions { get; }
         private ILogger Logger { get; }
         private CookieJar _cookieJar;
 
-        public UnifiService(IOptions<UnifiControllerOptions> options, IIpService ipService, ILogger<UnifiService> logger)
+        public UnifiService(IOptions<UnifiControllerOptions> options, IIpService ipService, ILogger<UnifiService> logger, IDnsService dnsService)
         {
             IpService = ipService;
             UnifiOptions = options.Value;
             Logger = logger;
+            DnsService = dnsService;
         }
 
         #region IUnifiService Implementation
@@ -292,7 +295,14 @@ namespace unifi.ipmanager.Services
                 }
             }
 
-            return await ExecuteAddUniClientRequest(addRequest);
+            var addResult = await ExecuteAddUniClientRequest(addRequest);
+
+            if (addResult.Success && syncDns && !await DnsService.AddDnsARecord(addResult.Data.Hostname, addResult.Data.FixedIp, null))
+            {
+                Logger.LogError("Unable to create DNS Record for {hostName}:{ip}", addResult.Data.Hostname, addResult.Data.FixedIp);
+            }
+
+            return addResult;
         }
 
         public async Task<ServiceResult> DeleteClient(string mac)
@@ -304,6 +314,8 @@ namespace unifi.ipmanager.Services
                 result.MarkFailed("Login failed.");
                 return result;
             }
+
+            // TODO: Get the record here, and if it has SyncDNS set to true, delete the dns entry
 
             var postRequest = new UnifiRequests.StaRequest()
             {

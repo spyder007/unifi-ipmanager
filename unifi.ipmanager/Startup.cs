@@ -1,5 +1,4 @@
 ﻿using unifi.ipmanager.Controllers;
-using unifi.ipmanager.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -11,7 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using unifi.ipmanager.Services;
-
+using unifi.ipmanager.Options;
 
 namespace unifi.ipmanager
 {
@@ -55,8 +54,10 @@ namespace unifi.ipmanager
                 .AddAuthorization()
                 .AddApiExplorer();
 
-            services.Configure<UnifiControllerOptions>(Configuration.GetSection("UnifiControllerOptions"));
-            services.Configure<IpOptions>(Configuration.GetSection("IpOptions"));
+            services.Configure<DnsServiceOptions>(Configuration.GetSection(DnsServiceOptions.SectionName));
+            services.Configure<UnifiControllerOptions>(Configuration.GetSection(UnifiControllerOptions.SectionName));
+            services.Configure<IpOptions>(Configuration.GetSection(IpOptions.SectionName));
+            services.AddScoped<IDnsService, DnsService>();
             services.AddScoped<IUnifiService, UnifiService>();
             services.AddScoped<IIpService, IpService>();
             services.AddRouting(options => options.LowercaseUrls = true);

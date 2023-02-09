@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using unifi.ipmanager.Models;
 using unifi.ipmanager.Models.DTO;
 using unifi.ipmanager.Models.Unifi;
 using unifi.ipmanager.Models.Unifi.Requests;
+using unifi.ipmanager.Options;
 
 namespace unifi.ipmanager.tests
 {

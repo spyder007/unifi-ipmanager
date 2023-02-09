@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Linq;
-using unifi.ipmanager.Models;
+using unifi.ipmanager.Options;
 
 namespace unifi.ipmanager.Services
 {
