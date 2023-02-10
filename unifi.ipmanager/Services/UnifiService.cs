@@ -315,7 +315,15 @@ namespace unifi.ipmanager.Services
                 return result;
             }
 
-            // TODO: Get the record here, and if it has SyncDNS set to true, delete the dns entry
+            var clientResult = await GetClient(mac);
+            if (clientResult.Success
+                && clientResult.Data.Noted
+                && (clientResult.Data.Notes.SyncDnsHostName ?? false)
+                && !await DnsService.DeleteDnsARecord(clientResult.Data.Hostname, clientResult.Data.FixedIp, null))
+            {
+                Logger.LogError("Unable to remove DNS Record for {hostName}:{ip}", clientResult.Data.Hostname,
+                    clientResult.Data.FixedIp);
+            }
 
             var postRequest = new UnifiRequests.StaRequest()
             {

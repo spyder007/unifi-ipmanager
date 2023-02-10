@@ -12,7 +12,9 @@ namespace unifi.ipmanager.Services
 
         Task<bool> AddDnsCNameRecord(string hostname, string alias, string zone);
 
-        Task<bool> DeleteDnsRecord(DnsRecord record);
+        Task<bool> DeleteDnsARecord(string hostname, string ip, string zone);
+
+        Task<bool> DeleteDnsRecord(DnsRecord dnsRecord);
 
         Task<bool> BulkCreateDnsRecords(IEnumerable<DnsRecord> dnsRecords);
     }

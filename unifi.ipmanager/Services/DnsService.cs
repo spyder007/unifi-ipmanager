@@ -62,7 +62,20 @@ namespace unifi.ipmanager.Services
 
         }
 
-        public async Task<bool> DeleteDnsRecord(DnsRecord record)
+        public async Task<bool> DeleteDnsARecord(string hostname, string ip, string zone)
+        {
+            var recordToDelete = new DnsRecord
+            {
+                HostName = hostname,
+                Data = ip,
+                ZoneName = string.IsNullOrWhiteSpace(zone) ? _options.DefaultZone : zone,
+                RecordType = DnsRecordType.A
+            };
+
+            return await DeleteDnsRecord(recordToDelete);
+        }
+
+        public async Task<bool> DeleteDnsRecord(DnsRecord dnsRecord)
         {
             try
             {
@@ -71,7 +84,7 @@ namespace unifi.ipmanager.Services
                 {
                     BaseUrl = _options.Url
                 };
-                await client.DeleteRecordAsync(record);
+                await client.DeleteRecordAsync(dnsRecord);
             }
             catch (ApiException ex)
             {
