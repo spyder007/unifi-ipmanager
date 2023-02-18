@@ -144,7 +144,10 @@ namespace unifi.ipmanager.Controllers
                     }
                 }
 
-                success = await DnsService.BulkCreateDnsRecords(recordsToCreate);
+                if (recordsToCreate.Count > 0)
+                {
+                    success = await DnsService.BulkCreateDnsRecords(recordsToCreate);
+                }
 
                 foreach (var recordToDelete in recordsToRemove)
                 {
