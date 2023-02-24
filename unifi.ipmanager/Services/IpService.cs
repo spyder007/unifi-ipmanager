@@ -1,8 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using Microsoft.Extensions.Caching.Distributed;
 using unifi.ipmanager.Options;
+using System.Threading.Tasks;
 
 namespace unifi.ipmanager.Services
 {
@@ -11,13 +15,18 @@ namespace unifi.ipmanager.Services
         private IpOptions IpOptions { get; }
         private ILogger Logger { get; }
 
-        public IpService(IOptions<IpOptions> options, ILogger<UnifiService> logger)
+        private IDistributedCache Cache { get; }
+
+        private const string IpCooldownCacheKeyTemplate = "Unifi.IpManager.IpCooldown.{0}";
+
+        public IpService(IOptions<IpOptions> options, ILogger<UnifiService> logger, IDistributedCache distributedCache)
         {
             IpOptions = options.Value;
             Logger = logger;
+            Cache = distributedCache;
         }
 
-        public string GetUnusedGroupIpAddress(string name, List<string> usedIps)
+        public async Task<string> GetUnusedGroupIpAddress(string name, List<string> usedIps)
         {
             var ipGroup = IpOptions.IpGroups.FirstOrDefault(g => g.Name == name);
 
@@ -36,7 +45,7 @@ namespace unifi.ipmanager.Services
                     while (lastIpDigit < block.Max)
                     {
                         var assignedIp = $"192.168.1.{lastIpDigit}";
-                        if (usedIps.All(ip => ip != assignedIp))
+                        if (usedIps.All(ip => ip != assignedIp) && !await IpInCooldown(assignedIp))
                         {
                             return assignedIp;
                         }
@@ -68,5 +77,30 @@ namespace unifi.ipmanager.Services
             var group = IpOptions.IpGroups.FirstOrDefault(group => group.Blocks.Any(b => b.Min <= lastIp && b.Max >= lastIp));
             return group != null ? group.Name : string.Empty;
         }
+
+        public async Task ReturnIpAddress(string ipAddress)
+        {
+            string cacheKey = GetCooldownKey(ipAddress);
+            // When the IP is returned, set a record in the cache with an absolute expiration
+            var cachedIp = await Cache.GetAsync(cacheKey);
+            if (cachedIp == null)
+            {
+                var options =
+                    new DistributedCacheEntryOptions().SetAbsoluteExpiration(DateTime.Now.AddMinutes(IpOptions.IpCooldownMinutes));
+                await Cache.SetAsync(cacheKey, Encoding.UTF8.GetBytes(ipAddress), options);
+            }
+        }
+
+        private async Task<bool> IpInCooldown(string ipAddress)
+        {
+            var cachedIp = await Cache.GetAsync(GetCooldownKey(ipAddress));
+            return cachedIp != null;
+        }
+
+        private string GetCooldownKey(string ipAddress)
+        {
+            return string.Format(IpCooldownCacheKeyTemplate, ipAddress);
+        }
+
     }
 }

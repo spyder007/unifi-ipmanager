@@ -5,6 +5,8 @@ namespace unifi.ipmanager.Options
     public class IpOptions
     {
         public const string SectionName = "IpOptions";
+
+        public int IpCooldownMinutes { get; set; }
         public List<IpGroup> IpGroups { get; set; }
     }
 

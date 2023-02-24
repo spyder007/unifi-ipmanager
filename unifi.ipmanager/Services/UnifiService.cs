@@ -288,7 +288,7 @@ namespace unifi.ipmanager.Services
 
             if (staticIp)
             {
-                var assignedIp = IpService.GetUnusedGroupIpAddress(group, clients.Select(c => c.FixedIp).ToList());
+                var assignedIp = await IpService.GetUnusedGroupIpAddress(group, clients.Select(c => c.FixedIp).ToList());
                 if (!string.IsNullOrWhiteSpace(assignedIp))
                 {
                     addRequest.FixedIp = assignedIp;
@@ -316,13 +316,20 @@ namespace unifi.ipmanager.Services
             }
 
             var clientResult = await GetClient(mac);
-            if (clientResult.Success
-                && clientResult.Data.Noted
-                && (clientResult.Data.Notes.SyncDnsHostName ?? false)
-                && !await DnsService.DeleteDnsARecord(clientResult.Data.Hostname, clientResult.Data.FixedIp, null))
+            if (clientResult.Success)
             {
-                Logger.LogError("Unable to remove DNS Record for {hostName}:{ip}", clientResult.Data.Hostname,
-                    clientResult.Data.FixedIp);
+                if (clientResult.Data.Noted
+                    && (clientResult.Data.Notes.SyncDnsHostName ?? false)
+                    && !await DnsService.DeleteDnsARecord(clientResult.Data.Hostname, clientResult.Data.FixedIp, null))
+                {
+                    Logger.LogError("Unable to remove DNS Record for {hostName}:{ip}", clientResult.Data.Hostname,
+                        clientResult.Data.FixedIp);
+                }
+
+                if (clientResult.Data.Noted && clientResult.Data.UseFixedIp)
+                {
+                    await IpService.ReturnIpAddress(clientResult.Data.FixedIp);
+                }
             }
 
             var postRequest = new UnifiRequests.StaRequest()
