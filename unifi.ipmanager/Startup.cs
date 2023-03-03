@@ -59,6 +59,11 @@ namespace unifi.ipmanager
             {
                 _ = services.AddStackExchangeRedisCache(options => options.Configuration = cacheConnection);
             }
+            else
+            {
+                // This should only be used in development, or when one instance of the service is guaranteed.
+                _ = services.AddDistributedMemoryCache();
+            }
 
             services.Configure<DnsServiceOptions>(Configuration.GetSection(DnsServiceOptions.SectionName));
             services.Configure<UnifiControllerOptions>(Configuration.GetSection(UnifiControllerOptions.SectionName));
