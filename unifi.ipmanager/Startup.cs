@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using unifi.ipmanager.Services;
 using unifi.ipmanager.Options;
+using Serilog;
 
 namespace unifi.ipmanager
 {
@@ -83,6 +84,7 @@ namespace unifi.ipmanager
                 options.AddDefaultPolicy(builder =>
                                 {
                                     var origins = Configuration.GetSection("AllowedOrigins").Get<string[]>();
+                                    Log.Warning("Allowed Origins: {origins}", origins);
                                     builder.WithOrigins(origins)
                                                         .AllowAnyHeader()
                                                         .AllowAnyMethod();
@@ -104,9 +106,8 @@ namespace unifi.ipmanager
             app.UseHealthChecks("/healthz", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
             app.UseOpenApi();
             app.UseAuthentication();
-            app.UseCors();
-
             app.UseRouting();
+            app.UseCors();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
                 endpoints.MapControllers());
