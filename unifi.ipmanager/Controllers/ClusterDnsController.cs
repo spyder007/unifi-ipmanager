@@ -42,6 +42,7 @@ namespace unifi.ipmanager.Controllers
         [HttpGet("{name}")]
         public async Task<ActionResult<ServiceResult<ClusterDns>>> Get([FromRoute] string name, [FromQuery] string zone)
         {
+            _logger.LogTrace("Processing request for all ClusterDns Records");
             try
             {
                 var clusterDns = new ClusterDns
@@ -54,7 +55,7 @@ namespace unifi.ipmanager.Controllers
 
                 if (string.IsNullOrEmpty(clusterDns.ZoneName))
                 {
-                    clusterDns.ZoneName = clusterDns.ControlPlane.First().ZoneName;
+                    clusterDns.ZoneName = clusterDns.ControlPlane.FirstOrDefault()?.ZoneName;
                 }
 
                 return new ServiceResult<ClusterDns>()
@@ -81,6 +82,7 @@ namespace unifi.ipmanager.Controllers
         [Produces(typeof(ServiceResult<ClusterDns>))]
         public async Task<ActionResult<ServiceResult<ClusterDns>>> Put([FromRoute] string name, [FromBody] ClusterDns incomingCluster)
         {
+            _logger.LogTrace("Processing request to update ClusterDns Record");
             try
             {
                 var existingRecordResult = await Get(incomingCluster.Name, incomingCluster.ZoneName);
@@ -103,7 +105,7 @@ namespace unifi.ipmanager.Controllers
                 // Incoming request has a control plane record not in the existing record - add new
                 foreach (var newControlPlane in incomingCluster.ControlPlane)
                 {
-                    if (!existingRecord.ControlPlane.Any(rec =>
+                    if (!existingRecord.ControlPlane.Exists(rec =>
                             rec.HostName == newControlPlane.HostName && rec.Data == newControlPlane.Data &&
                             rec.ZoneName == newControlPlane.ZoneName && rec.RecordType == newControlPlane.RecordType))
                     {
@@ -114,7 +116,7 @@ namespace unifi.ipmanager.Controllers
                 // Existing request has a control plane record not in the new one - delete existing
                 foreach (var existingControlPlane in existingRecord.ControlPlane)
                 {
-                    if (!incomingCluster.ControlPlane.Any(rec =>
+                    if (!incomingCluster.ControlPlane.Exists(rec =>
                             rec.HostName == existingControlPlane.HostName && rec.Data == existingControlPlane.Data &&
                             rec.ZoneName == existingControlPlane.ZoneName && rec.RecordType == existingControlPlane.RecordType))
                     {
@@ -125,7 +127,7 @@ namespace unifi.ipmanager.Controllers
                 // Incoming request has a traffic record not in the existing record - add new
                 foreach (var newTraffic in incomingCluster.Traffic)
                 {
-                    if (!existingRecord.Traffic.Any(rec =>
+                    if (!existingRecord.Traffic.Exists(rec =>
                             rec.HostName == newTraffic.HostName && rec.Data == newTraffic.Data &&
                             rec.ZoneName == newTraffic.ZoneName && rec.RecordType == newTraffic.RecordType))
                     {
@@ -136,7 +138,7 @@ namespace unifi.ipmanager.Controllers
                 // Existing request has a traffic record not in the new one - delete existing
                 foreach (var existingTraffic in existingRecord.Traffic)
                 {
-                    if (!incomingCluster.Traffic.Any(rec =>
+                    if (!incomingCluster.Traffic.Exists(rec =>
                             rec.HostName == existingTraffic.HostName && rec.Data == existingTraffic.Data &&
                             rec.ZoneName == existingTraffic.ZoneName && rec.RecordType == existingTraffic.RecordType))
                     {
@@ -180,6 +182,7 @@ namespace unifi.ipmanager.Controllers
         [HttpPost]
         public async Task<ActionResult<ServiceResult<ClusterDns>>> Post([FromBody] NewClusterRequest newRequest)
         {
+            _logger.LogTrace("Processing request to create new ClusterDns Record");
             try
             {
                 var controlPlaneHost = $"cp-{newRequest.Name}";

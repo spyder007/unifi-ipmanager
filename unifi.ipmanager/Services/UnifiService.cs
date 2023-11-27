@@ -259,7 +259,7 @@ namespace unifi.ipmanager.Services
 
             var macAddress = GenerateMacAddress();
 
-            while (clients.Any(c => c.Mac == macAddress))
+            while (clients.Exists(c => c.Mac == macAddress))
             {
                 macAddress = GenerateMacAddress();
             }

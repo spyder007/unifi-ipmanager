@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using unifi.ipmanager.Services;
 using unifi.ipmanager.Options;
+using Serilog;
 
 namespace unifi.ipmanager
 {
@@ -55,15 +56,9 @@ namespace unifi.ipmanager
                 .AddApiExplorer();
 
             var cacheConnection = Configuration.GetConnectionString("RedisCache");
-            if (!string.IsNullOrEmpty(cacheConnection))
-            {
-                _ = services.AddStackExchangeRedisCache(options => options.Configuration = cacheConnection);
-            }
-            else
-            {
-                // This should only be used in development, or when one instance of the service is guaranteed.
-                _ = services.AddDistributedMemoryCache();
-            }
+            _ = !string.IsNullOrEmpty(cacheConnection)
+                ? services.AddStackExchangeRedisCache(options => options.Configuration = cacheConnection)
+                : services.AddDistributedMemoryCache();
 
             services.Configure<DnsServiceOptions>(Configuration.GetSection(DnsServiceOptions.SectionName));
             services.Configure<UnifiControllerOptions>(Configuration.GetSection(UnifiControllerOptions.SectionName));
@@ -88,6 +83,7 @@ namespace unifi.ipmanager
                 options.AddDefaultPolicy(builder =>
                                 {
                                     var origins = Configuration.GetSection("AllowedOrigins").Get<string[]>();
+                                    Log.Warning("Allowed Origins: {origins}", origins);
                                     builder.WithOrigins(origins)
                                                         .AllowAnyHeader()
                                                         .AllowAnyMethod();
@@ -109,9 +105,8 @@ namespace unifi.ipmanager
             app.UseHealthChecks("/healthz", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
             app.UseOpenApi();
             app.UseAuthentication();
-            app.UseCors();
-
             app.UseRouting();
+            app.UseCors();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
                 endpoints.MapControllers());
