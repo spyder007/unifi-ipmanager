@@ -53,7 +53,7 @@ namespace unifi.ipmanager.Services
                     }
                 }
             }
-            Logger.LogWarning($"No open IPs found for {ipGroup.Name}");
+            Logger.LogWarning("No open IPs found for {groupName}", ipGroup.Name);
             return string.Empty;
         }
 
@@ -96,7 +96,7 @@ namespace unifi.ipmanager.Services
             return cachedIp != null;
         }
 
-        private string GetCooldownKey(string ipAddress)
+        private static string GetCooldownKey(string ipAddress)
         {
             return string.Format(IpCooldownCacheKeyTemplate, ipAddress);
         }

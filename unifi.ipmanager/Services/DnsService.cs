@@ -24,7 +24,7 @@ namespace unifi.ipmanager.Services
         {
             if (string.IsNullOrEmpty(_options.Url))
             {
-                _logger.LogInformation($"DNS Service not configured.  Ignoring AddDnsARecord({hostname}, {ip}, {zone})");
+                _logger.LogInformation("DNS Service not configured.  Ignoring AddDnsARecord({hostname}, {ip}, {zone})", hostname, ip, zone);
                 return true;
             }
 
@@ -56,7 +56,7 @@ namespace unifi.ipmanager.Services
         {
             if (string.IsNullOrEmpty(_options.Url))
             {
-                _logger.LogInformation($"DNS Service not configured.  Ignoring BulkCreateDnsRecord - {dnsRecords.Count()} records");
+                _logger.LogInformation("DNS Service not configured.  Ignoring BulkCreateDnsRecord - {count} records", dnsRecords.Count());
                 return true;
             }
             using var httpClient = new HttpClient();
@@ -90,7 +90,7 @@ namespace unifi.ipmanager.Services
         {
             if (string.IsNullOrEmpty(_options.Url))
             {
-                _logger.LogInformation($"DNS Service not configured.  Ignoring DeleteDnsRecord({dnsRecord.HostName}, {dnsRecord.Data}, {dnsRecord.ZoneName})");
+                _logger.LogInformation("DNS Service not configured.  Ignoring DeleteDnsRecord({hostname}, {ip}, {zone})", dnsRecord.HostName, dnsRecord.Data, dnsRecord.ZoneName);
                 return true;
             }
 
@@ -116,7 +116,7 @@ namespace unifi.ipmanager.Services
         {
             if (string.IsNullOrEmpty(_options.Url))
             {
-                _logger.LogInformation($"DNS Service not configured.  Ignoring GetDnsRecordsForHostname({hostname}, {zone})");
+                _logger.LogInformation("DNS Service not configured.  Ignoring GetDnsRecordsForHostname({hostname}, {zone})", hostname, zone);
                 return new List<DnsRecord>();
             }
 
