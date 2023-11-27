@@ -1,4 +1,6 @@
-﻿namespace unifi.ipmanager.Models
+﻿using unifi.ipmanager.Options;
+
+namespace unifi.ipmanager.Models
 {
     /// <summary>
     /// Class Info.

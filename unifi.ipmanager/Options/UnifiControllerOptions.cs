@@ -1,10 +1,11 @@
-﻿namespace unifi.ipmanager.Models
+﻿namespace unifi.ipmanager.Options
 {
     /// <summary>
     /// Class MyOptions.
     /// </summary>
     public class UnifiControllerOptions
     {
+        public const string SectionName = "UnifiControllerOptions";
         /// <summary>
         /// Unifi Controller URL
         /// </summary>

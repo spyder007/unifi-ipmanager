@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using unifi.ipmanager.Controllers;
-using unifi.ipmanager.Models;
+using unifi.ipmanager.Options;
 
 namespace unifi.ipmanager.tests
 {
