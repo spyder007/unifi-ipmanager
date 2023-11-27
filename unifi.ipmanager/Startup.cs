@@ -56,10 +56,9 @@ namespace unifi.ipmanager
                 .AddApiExplorer();
 
             var cacheConnection = Configuration.GetConnectionString("RedisCache");
-            if (!string.IsNullOrEmpty(cacheConnection))
-            {
-                _ = services.AddStackExchangeRedisCache(options => options.Configuration = cacheConnection);
-            }
+            _ = !string.IsNullOrEmpty(cacheConnection)
+                ? services.AddStackExchangeRedisCache(options => options.Configuration = cacheConnection)
+                : services.AddDistributedMemoryCache();
 
             services.Configure<DnsServiceOptions>(Configuration.GetSection(DnsServiceOptions.SectionName));
             services.Configure<UnifiControllerOptions>(Configuration.GetSection(UnifiControllerOptions.SectionName));
