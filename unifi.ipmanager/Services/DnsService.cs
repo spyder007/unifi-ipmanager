@@ -22,6 +22,12 @@ namespace unifi.ipmanager.Services
 
         public async Task<bool> AddDnsARecord(string hostname, string ip, string zone)
         {
+            if (string.IsNullOrEmpty(_options.Url))
+            {
+                _logger.LogInformation($"DNS Service not configured.  Ignoring AddDnsARecord({hostname}, {ip}, {zone})");
+                return true;
+            }
+
             using var httpClient = new HttpClient();
             var client = new Client(httpClient)
             {
@@ -48,6 +54,11 @@ namespace unifi.ipmanager.Services
 
         public async Task<bool> BulkCreateDnsRecords(IEnumerable<DnsRecord> dnsRecords)
         {
+            if (string.IsNullOrEmpty(_options.Url))
+            {
+                _logger.LogInformation($"DNS Service not configured.  Ignoring BulkCreateDnsRecord - {dnsRecords.Count()} records");
+                return true;
+            }
             using var httpClient = new HttpClient();
             var client = new Client(httpClient)
             {
@@ -77,6 +88,12 @@ namespace unifi.ipmanager.Services
 
         public async Task<bool> DeleteDnsRecord(DnsRecord dnsRecord)
         {
+            if (string.IsNullOrEmpty(_options.Url))
+            {
+                _logger.LogInformation($"DNS Service not configured.  Ignoring DeleteDnsRecord({dnsRecord.HostName}, {dnsRecord.Data}, {dnsRecord.ZoneName})");
+                return true;
+            }
+
             try
             {
                 using var httpClient = new HttpClient();
@@ -97,6 +114,12 @@ namespace unifi.ipmanager.Services
 
         public async Task<IEnumerable<DnsRecord>> GetDnsRecordsForHostname(string hostname, string zone)
         {
+            if (string.IsNullOrEmpty(_options.Url))
+            {
+                _logger.LogInformation($"DNS Service not configured.  Ignoring GetDnsRecordsForHostname({hostname}, {zone})");
+                return new List<DnsRecord>();
+            }
+
             try
             {
                 using var httpClient = new HttpClient();
