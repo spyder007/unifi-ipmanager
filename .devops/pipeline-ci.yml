@@ -32,8 +32,12 @@ extends:
     dockerImageName: spydersoft/ha/unifi.ipmanager
     imageTagVariableName: unifi_ipmanager
     helmfileRepoName: helmfileconfig
-    execute_sonar: ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') }}
-    sonar_endpoint_name: sonarqube
-    sonar_project_name: unifi.ipmanager
-    sonar_project_key: Home_Automation_Home_Automation_AYV-PxRymblgg6j_jAeI
+    execute_sonar: true
     execute_tests: true
+    use_sonarcloud: true
+    sonar_cloud_organization: spydersoft-mjg
+    sonar_endpoint_name: sonarcloud-spydersoft
+    sonar_project_name: unifi-ipmanager
+    sonar_project_key: spyder007_unifi-ipmanager
+
+    
