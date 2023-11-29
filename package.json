@@ -9,15 +9,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@bitbucket.org/spydersoftteam/unifi.ipmanager.git"
+    "url": "https://github.com/spyder007/unifi-ipmanager"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://bitbucket.org/spydersoftteam/unifi.ipmanager/issues"
+    "url": "https://github.com/spyder007/unifi-ipmanager/issues"
   },
-  "homepage": "https://bitbucket.org/spydersoftteam/unifi.ipmanager#readme",
+  "homepage": "https://github.com/spyder007/unifi-ipmanager",
   "devDependencies": {
     "husky": "^8.0.0",
     "lint-staged": "^13.1.0"
