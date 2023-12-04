@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using unifi.ipmanager.Models.DTO;
-using unifi.ipmanager.Models.Unifi;
-using unifi.ipmanager.Models.Unifi.Requests;
-using unifi.ipmanager.Options;
+using Unifi.IpManager.Models.DTO;
+using Unifi.IpManager.Models.Unifi;
+using Unifi.IpManager.Models.Unifi.Requests;
+using Unifi.IpManager.Options;
 
-namespace unifi.ipmanager.tests
+namespace Unifi.IpManager.Tests
 {
     public class ModelVerificationTests
     {

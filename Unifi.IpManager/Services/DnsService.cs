@@ -3,11 +3,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net.Http;
 using System.Threading.Tasks;
-using unifi.ipmanager.ExternalServices;
-using unifi.ipmanager.Options;
+using Unifi.IpManager.ExternalServices;
+using Unifi.IpManager.Options;
 using System.Linq;
 
-namespace unifi.ipmanager.Services
+namespace Unifi.IpManager.Services
 {
     public class DnsService : IDnsService
     {

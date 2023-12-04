@@ -4,12 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Linq;
 using System.Threading.Tasks;
-using unifi.ipmanager.Models.Dns;
-using unifi.ipmanager.Models.DTO;
-using unifi.ipmanager.Services;
-using unifi.ipmanager.ExternalServices;
+using Unifi.IpManager.Models.Dns;
+using Unifi.IpManager.Models.DTO;
+using Unifi.IpManager.Services;
+using Unifi.IpManager.ExternalServices;
 
-namespace unifi.ipmanager.Controllers
+namespace Unifi.IpManager.Controllers
 {
     [ApiVersion("1.0")]
     [Route("[controller]")]

@@ -3,11 +3,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using unifi.ipmanager.Models.DTO;
-using unifi.ipmanager.Models.Unifi;
-using unifi.ipmanager.Services;
+using Unifi.IpManager.Models.DTO;
+using Unifi.IpManager.Models.Unifi;
+using Unifi.IpManager.Services;
 
-namespace unifi.ipmanager.Controllers
+namespace Unifi.IpManager.Controllers
 {
     /// <summary>
     /// Class LoggingController with Options.

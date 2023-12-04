@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace unifi.ipmanager.Services
+namespace Unifi.IpManager.Services
 {
     public interface IIpService
     {

@@ -1,6 +1,6 @@
-﻿using unifi.ipmanager.Models.Unifi;
+﻿using Unifi.IpManager.Models.Unifi;
 
-namespace unifi.ipmanager.Models.DTO
+namespace Unifi.IpManager.Models.DTO
 {
     public class EditClientRequest
     {

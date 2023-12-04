@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "unifi.ipmanager", "unifi.ipmanager\unifi.ipmanager.csproj", "{DFA8D7B9-B656-472E-B686-05DCB8100D84}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Unifi.IpManager", "Unifi.IpManager\Unifi.IpManager.csproj", "{DFA8D7B9-B656-472E-B686-05DCB8100D84}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unifi.ipmanager.tests", "unifi.ipmanager.tests\unifi.ipmanager.tests.csproj", "{C037C777-B78E-4820-A20E-45085F802186}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unifi.IpManager.Tests", "Unifi.IpManager.Tests\Unifi.IpManager.Tests.csproj", "{C037C777-B78E-4820-A20E-45085F802186}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

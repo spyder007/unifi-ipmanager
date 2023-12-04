@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Text.Json.Serialization;
 
-namespace unifi.ipmanager.Models.Unifi
+namespace Unifi.IpManager.Models.Unifi
 {
     public class UniNote
     {

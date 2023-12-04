@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\unifi.ipmanager\unifi.ipmanager.csproj" />
+    <ProjectReference Include="..\Unifi.IpManager\Unifi.IpManager.csproj" />
   </ItemGroup>
 
 </Project>

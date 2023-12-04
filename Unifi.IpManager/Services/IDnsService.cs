@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using unifi.ipmanager.ExternalServices;
+using Unifi.IpManager.ExternalServices;
 
-namespace unifi.ipmanager.Services
+namespace Unifi.IpManager.Services
 {
     public interface IDnsService
     {

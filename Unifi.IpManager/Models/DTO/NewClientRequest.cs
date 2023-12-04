@@ -1,4 +1,4 @@
-﻿namespace unifi.ipmanager.Models.DTO
+﻿namespace Unifi.IpManager.Models.DTO
 {
     public class NewClientRequest : EditClientRequest
     {

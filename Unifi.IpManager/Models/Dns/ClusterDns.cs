@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using unifi.ipmanager.ExternalServices;
+using Unifi.IpManager.ExternalServices;
 
-namespace unifi.ipmanager.Models.Dns
+namespace Unifi.IpManager.Models.Dns
 {
     public class ClusterDns
     {

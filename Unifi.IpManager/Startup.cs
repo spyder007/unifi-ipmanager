@@ -1,4 +1,4 @@
-﻿using unifi.ipmanager.Controllers;
+﻿using Unifi.IpManager.Controllers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -9,11 +9,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using unifi.ipmanager.Services;
-using unifi.ipmanager.Options;
+using Unifi.IpManager.Services;
+using Unifi.IpManager.Options;
 using Serilog;
 
-namespace unifi.ipmanager
+namespace Unifi.IpManager
 {
     public class Startup
     {
@@ -70,7 +70,7 @@ namespace unifi.ipmanager
 
             services.AddOpenApiDocument(doc =>
             {
-                doc.DocumentName = "unifi.ipmanager";
+                doc.DocumentName = "Unifi.IpManager";
                 doc.Title = "Unifi IP Manager API";
                 doc.Description = "API Wrapper for the Unifi Controller";
                 doc.SerializerSettings = new JsonSerializerSettings

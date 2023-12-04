@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace unifi.ipmanager.Models.Unifi.Requests
+namespace Unifi.IpManager.Models.Unifi.Requests
 {
     public class StaRequest
     {

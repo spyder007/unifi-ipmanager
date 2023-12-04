@@ -3,7 +3,7 @@
   "defaultVariables": "Configuration=Debug",
   "documentGenerator": {
     "aspNetCoreToOpenApi": {
-      "project": "unifi.ipmanager.csproj",
+      "project": "Unifi.IpManager.csproj",
       "msBuildProjectExtensionsPath": null,
       "configuration": "$(Configuration)",
       "runtime": null,
@@ -42,12 +42,12 @@
       "contractResolverType": null,
       "serializerSettingsType": null,
       "useDocumentProvider": true,
-      "documentName": "unifi.ipmanager",
+      "documentName": "Unifi.IpManager",
       "aspNetCoreEnvironment": null,
       "createWebHostBuilderMethod": null,
       "startupType": null,
       "allowNullableBodyParameters": true,
-      "output": "specs/unifi.ipmanager.json",
+      "output": "specs/Unifi.IpManager.json",
       "outputType": "Swagger2",
       "newLineBehavior": "Auto",
       "assemblyPaths": [],

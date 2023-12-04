@@ -1,4 +1,4 @@
-﻿namespace unifi.ipmanager.Options
+﻿namespace Unifi.IpManager.Options
 {
     /// <summary>
     /// Class MyOptions.

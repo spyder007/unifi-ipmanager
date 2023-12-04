@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using unifi.ipmanager.Models.DTO;
-using unifi.ipmanager.Models.Unifi;
+using Unifi.IpManager.Models.DTO;
+using Unifi.IpManager.Models.Unifi;
 
-namespace unifi.ipmanager.Services
+namespace Unifi.IpManager.Services
 {
     public interface IUnifiService
     {

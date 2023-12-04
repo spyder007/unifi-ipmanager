@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Text.Json.Serialization;
 
-namespace unifi.ipmanager.Models.DTO
+namespace Unifi.IpManager.Models.DTO
 {
     public class ProvisionRequest
     {

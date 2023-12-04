@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reflection;
-using unifi.ipmanager.Models;
+using Unifi.IpManager.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using unifi.ipmanager.Options;
+using Unifi.IpManager.Options;
 
-namespace unifi.ipmanager.Controllers
+namespace Unifi.IpManager.Controllers
 {
     /// <summary>
     /// Class InfoController.

@@ -1,13 +1,13 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-using unifi.ipmanager.Controllers;
-using unifi.ipmanager.Options;
-using unifi.ipmanager.Models.DTO;
-using unifi.ipmanager.Models.Unifi;
-using unifi.ipmanager.Services;
+using Unifi.IpManager.Controllers;
+using Unifi.IpManager.Options;
+using Unifi.IpManager.Models.DTO;
+using Unifi.IpManager.Models.Unifi;
+using Unifi.IpManager.Services;
 
-namespace unifi.ipmanager.tests
+namespace Unifi.IpManager.Tests
 {
     public class ClientControllerTests
     {

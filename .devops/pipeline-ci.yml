@@ -24,16 +24,17 @@ pr: none
 extends:
   template: stages/stages-build-docker-update-helm/v1.yml@templates
   parameters:
-    buildProject: unifi.ipmanager.sln
-    publishProject: unifi.ipmanager/unifi.ipmanager.csproj
+    buildProject: Unifi.IpManager.sln
+    publishProject: Unifi.IpManager/Unifi.IpManager.csproj
     artifactName: unifiIpManager
-    artifactZipName: unifi.ipmanager
+    artifactZipName: Unifi.IpManager
     dockerImageFileName: unifi_ipmanager
     dockerImageName: spydersoft/ha/unifi.ipmanager
     imageTagVariableName: unifi_ipmanager
     helmfileRepoName: helmfileconfig
     execute_sonar: true
     execute_tests: true
+    test_projects: '**/*.Tests/*.csproj'
     use_sonarcloud: true
     sonar_cloud_organization: spydersoft-mjg
     sonar_endpoint_name: sonarcloud-spydersoft

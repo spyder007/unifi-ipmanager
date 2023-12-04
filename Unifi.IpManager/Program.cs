@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Serilog;
-using unifi.ipmanager;
+using Unifi.IpManager;
 
 var baseConfig = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
@@ -14,7 +14,7 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-    Log.Information("unifi.ipmanager starting.");
+    Log.Information("Unifi.IpManager starting.");
     var builder = WebApplication.CreateBuilder(args);
 
     _ = builder.Host.UseSerilog((context, services, configuration) =>
@@ -32,10 +32,10 @@ try
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "unifi.ipmanager failed to start.");
+    Log.Fatal(ex, "Unifi.IpManager failed to start.");
 }
 finally
 {
-    Log.Information("unifi.ipmanager shut down complete");
+    Log.Information("Unifi.IpManager shut down complete");
     Log.CloseAndFlush();
 }

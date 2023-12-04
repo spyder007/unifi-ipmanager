@@ -1,4 +1,4 @@
-﻿namespace unifi.ipmanager.Models.Unifi
+﻿namespace Unifi.IpManager.Models.Unifi
 {
     public class UniResponse<TReturnType>
     {

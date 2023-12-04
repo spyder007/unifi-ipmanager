@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-using unifi.ipmanager.Controllers;
-using unifi.ipmanager.Options;
+using Unifi.IpManager.Controllers;
+using Unifi.IpManager.Options;
 
-namespace unifi.ipmanager.tests
+namespace Unifi.IpManager.Tests
 {
     public class InfoControllerTests
     {

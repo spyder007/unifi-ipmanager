@@ -16,6 +16,6 @@ EXPOSE 8080
 # Tell docker that all future commands should run as the appuser user, must use the user number
 USER 1000
 
-ENTRYPOINT ["dotnet", "unifi.ipmanager.dll"]
+ENTRYPOINT ["dotnet", "Unifi.IpManager.dll"]
 
 

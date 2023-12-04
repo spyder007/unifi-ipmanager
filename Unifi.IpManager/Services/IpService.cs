@@ -4,10 +4,10 @@ using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.Caching.Distributed;
-using unifi.ipmanager.Options;
+using Unifi.IpManager.Options;
 using System.Threading.Tasks;
 
-namespace unifi.ipmanager.Services
+namespace Unifi.IpManager.Services
 {
     public class IpService : IIpService
     {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace unifi.ipmanager.Models.Dns
+namespace Unifi.IpManager.Models.Dns
 {
     public class NewClusterRequest
     {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace unifi.ipmanager.Options
+namespace Unifi.IpManager.Options
 {
     public class IpOptions
     {

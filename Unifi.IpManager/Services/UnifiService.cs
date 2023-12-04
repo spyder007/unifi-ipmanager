@@ -9,13 +9,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Serialization;
-using unifi.ipmanager.Models.DTO;
-using unifi.ipmanager.Models.Unifi;
+using Unifi.IpManager.Models.DTO;
+using Unifi.IpManager.Models.Unifi;
 using NullValueHandling = Newtonsoft.Json.NullValueHandling;
-using UnifiRequests = unifi.ipmanager.Models.Unifi.Requests;
-using unifi.ipmanager.Options;
+using UnifiRequests = Unifi.IpManager.Models.Unifi.Requests;
+using Unifi.IpManager.Options;
 
-namespace unifi.ipmanager.Services
+namespace Unifi.IpManager.Services
 {
     public class UnifiService : IUnifiService
     {

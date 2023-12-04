@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace unifi.ipmanager.Services
+namespace Unifi.IpManager.Services
 {
     public static class ServiceExtensions
     {
