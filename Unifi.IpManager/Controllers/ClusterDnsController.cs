@@ -8,32 +8,28 @@ using Unifi.IpManager.Models.Dns;
 using Unifi.IpManager.Models.DTO;
 using Unifi.IpManager.Services;
 using Unifi.IpManager.ExternalServices;
+using Asp.Versioning;
 
 namespace Unifi.IpManager.Controllers
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ClientController"/> class.
+    /// </summary>
+    /// <param name="dnsService">The unifi service.</param>
+    /// <param name="logger">The logger.</param>
     [ApiVersion("1.0")]
     [Route("[controller]")]
     [ApiController]
     [Authorize]
-    public class ClusterDnsController
+    public class ClusterDnsController(IDnsService dnsService, ILogger<ClientController> logger)
     {
-        private readonly ILogger<ClientController> _logger;
+        private readonly ILogger<ClientController> _logger = logger;
 
         /// <summary>
         /// Gets or sets the options.
         /// </summary>
         /// <value>The options.</value>
-        private IDnsService DnsService { get; set; }
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ClientController"/> class.
-        /// </summary>
-        /// <param name="dnsService">The unifi service.</param>
-        /// <param name="logger">The logger.</param>
-        public ClusterDnsController(IDnsService dnsService, ILogger<ClientController> logger)
-        {
-            DnsService = dnsService;
-            _logger = logger;
-        }
+        private IDnsService DnsService { get; set; } = dnsService;
 
         /// <summary>
         /// Gets this instance.
@@ -68,10 +64,10 @@ namespace Unifi.IpManager.Controllers
             {
                 return new ServiceResult<ClusterDns>
                 {
-                    Errors = new List<string>
-                    {
+                    Errors =
+                    [
                         ex.Message
-                    },
+                    ],
                     Success = false
                 };
             }
@@ -92,7 +88,7 @@ namespace Unifi.IpManager.Controllers
                     return new ServiceResult<ClusterDns>
                     {
                         Success = false,
-                        Errors = new List<string> { $"Cluster {name} does not exist." }
+                        Errors = [$"Cluster {name} does not exist."]
                     };
                 }
 
@@ -171,10 +167,10 @@ namespace Unifi.IpManager.Controllers
                 return new ServiceResult<ClusterDns>
                 {
                     Success = false,
-                    Errors = new List<string>
-                    {
+                    Errors =
+                    [
                         ex.Message
-                    }
+                    ]
                 };
             }
         }
@@ -225,10 +221,10 @@ namespace Unifi.IpManager.Controllers
                 return new ServiceResult<ClusterDns>
                 {
                     Success = false,
-                    Errors = new List<string>
-                    {
+                    Errors =
+                    [
                         ex.Message
-                    }
+                    ]
                 };
             }
         }

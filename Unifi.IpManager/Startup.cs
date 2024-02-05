@@ -1,9 +1,8 @@
-﻿using Unifi.IpManager.Controllers;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,12 +22,8 @@ namespace Unifi.IpManager
             services.AddSingleton(() => Configuration)
                 .AddApiVersioning(options =>
             {
-                options.DefaultApiVersion = ApiVersion.Parse("1.0");
+                options.DefaultApiVersion = new ApiVersion(1, 0);
                 options.AssumeDefaultVersionWhenUnspecified = true;
-
-                options.Conventions.Controller<ClientController>()
-                    .HasApiVersion(ApiVersion.Parse("1.0"));
-
             });
 
 
