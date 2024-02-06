@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Unifi.IpManager.Options;
+using Asp.Versioning;
 
 namespace Unifi.IpManager.Controllers
 {
@@ -15,29 +16,23 @@ namespace Unifi.IpManager.Controllers
     /// Implements the <see cref="ControllerBase" />
     /// </summary>
     /// <seealso cref="ControllerBase" />
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="InfoController"/> class.
+    /// </remarks>
+    /// <param name="log"></param>
+    /// <param name="myOpts">The options.</param>
     [ApiVersion("1.0")]
     [Route("[controller]")]
     [Authorize()]
     [ApiController]
-    public class InfoController : ControllerBase
+    public class InfoController(ILogger<InfoController> log, IOptions<UnifiControllerOptions> myOpts) : ControllerBase
     {
-        private ILogger<InfoController> Log { get; set; }
+        private ILogger<InfoController> Log { get; set; } = log;
         /// <summary>
         /// Gets or sets the UnifiControllerOptions options.
         /// </summary>
         /// <value>The UnifiControllerOptions options.</value>
-        private UnifiControllerOptions UnifiControllerOptions { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="InfoController"/> class.
-        /// </summary>
-        /// <param name="log"></param>
-        /// <param name="myOpts">The options.</param>
-        public InfoController(ILogger<InfoController> log, IOptions<UnifiControllerOptions> myOpts)
-        {
-            Log = log;
-            UnifiControllerOptions = myOpts.Value;
-        }
+        private UnifiControllerOptions UnifiControllerOptions { get; set; } = myOpts.Value;
 
         /// <summary>
         /// Gets this instance.

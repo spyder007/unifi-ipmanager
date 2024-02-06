@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -12,30 +13,24 @@ namespace Unifi.IpManager.Controllers
     /// <summary>
     /// Class LoggingController with Options.
     /// </summary>
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="ClientController"/> class.
+    /// </remarks>
+    /// <param name="unifiService">The unifi service.</param>
+    /// <param name="logger">The logger.</param>
     [ApiVersion("1.0")]
     [Route("[controller]")]
     [ApiController]
     [Authorize]
-    public class ClientController : ControllerBase
+    public class ClientController(IUnifiService unifiService, ILogger<ClientController> logger) : ControllerBase
     {
-        private readonly ILogger<ClientController> _logger;
+        private readonly ILogger<ClientController> _logger = logger;
 
         /// <summary>
         /// Gets or sets the options.
         /// </summary>
         /// <value>The options.</value>
-        private IUnifiService IUnifyService { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ClientController"/> class.
-        /// </summary>
-        /// <param name="unifiService">The unifi service.</param>
-        /// <param name="logger">The logger.</param>
-        public ClientController(IUnifiService unifiService, ILogger<ClientController> logger)
-        {
-            IUnifyService = unifiService;
-            _logger = logger;
-        }
+        private IUnifiService IUnifyService { get; set; } = unifiService;
 
         /// <summary>
         /// Gets this instance.

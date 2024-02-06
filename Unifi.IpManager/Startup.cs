@@ -1,27 +1,20 @@
-﻿using Unifi.IpManager.Controllers;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Unifi.IpManager.Services;
 using Unifi.IpManager.Options;
 using Serilog;
 
 namespace Unifi.IpManager
 {
-    public class Startup
+    public class Startup(IConfiguration configuration)
     {
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
-        public IConfiguration Configuration { get; }
+        public IConfiguration Configuration { get; } = configuration;
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -29,12 +22,8 @@ namespace Unifi.IpManager
             services.AddSingleton(() => Configuration)
                 .AddApiVersioning(options =>
             {
-                options.DefaultApiVersion = ApiVersion.Parse("1.0");
+                options.DefaultApiVersion = new ApiVersion(1, 0);
                 options.AssumeDefaultVersionWhenUnspecified = true;
-
-                options.Conventions.Controller<ClientController>()
-                    .HasApiVersion(ApiVersion.Parse("1.0"));
-
             });
 
 
@@ -53,7 +42,11 @@ namespace Unifi.IpManager
                     options.EnableEndpointRouting = false;
                 })
                 .AddAuthorization()
-                .AddApiExplorer();
+                .AddApiExplorer()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                });
 
             var cacheConnection = Configuration.GetConnectionString("RedisCache");
             _ = !string.IsNullOrEmpty(cacheConnection)
@@ -73,10 +66,6 @@ namespace Unifi.IpManager
                 doc.DocumentName = "Unifi.IpManager";
                 doc.Title = "Unifi IP Manager API";
                 doc.Description = "API Wrapper for the Unifi Controller";
-                doc.SerializerSettings = new JsonSerializerSettings
-                {
-                    ContractResolver = new CamelCasePropertyNamesContractResolver()
-                };
             });
             services.AddCors(options =>
             {

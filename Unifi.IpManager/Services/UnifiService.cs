@@ -17,25 +17,17 @@ using Unifi.IpManager.Options;
 
 namespace Unifi.IpManager.Services
 {
-    public class UnifiService : IUnifiService
+    public class UnifiService(IOptions<UnifiControllerOptions> options, IIpService ipService, ILogger<UnifiService> logger, IDnsService dnsService) : IUnifiService
     {
         private const string SiteId = "at7as3rk";
         private const string NetworkId = "59f62826e4b0c5498bc2a82e";
 
-        private IIpService IpService { get; }
-        private IDnsService DnsService { get; }
+        private IIpService IpService { get; } = ipService;
+        private IDnsService DnsService { get; } = dnsService;
 
-        private UnifiControllerOptions UnifiOptions { get; }
-        private ILogger Logger { get; }
+        private UnifiControllerOptions UnifiOptions { get; } = options.Value;
+        private ILogger Logger { get; } = logger;
         private CookieJar _cookieJar;
-
-        public UnifiService(IOptions<UnifiControllerOptions> options, IIpService ipService, ILogger<UnifiService> logger, IDnsService dnsService)
-        {
-            IpService = ipService;
-            UnifiOptions = options.Value;
-            Logger = logger;
-            DnsService = dnsService;
-        }
 
         #region IUnifiService Implementation
 
@@ -341,7 +333,7 @@ namespace Unifi.IpManager.Services
             var postRequest = new UnifiRequests.StaRequest()
             {
                 Cmd = "forget-sta",
-                Macs = new List<string> { mac }
+                Macs = [mac]
             };
 
             var postRequestString = JsonConvert.SerializeObject(postRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
@@ -529,9 +521,9 @@ namespace Unifi.IpManager.Services
                 var devicesClients = new List<UniClient>();
 
                 var data = await UnifiOptions.Url.AppendPathSegments("api", "s", SiteId, "stat", "device")
-                    .WithCookies(_cookieJar).GetJsonAsync();
+                    .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniDevice>>>();
 
-                if (data.meta.rc == UniMeta.ErrorResponse)
+                if (data.Meta.Rc == UniMeta.ErrorResponse)
                 {
                     string message = data.Meta.Msg;
                     Logger.LogError("Error retrieving clients from {url}: {message}", UnifiOptions.Url, message);
@@ -539,17 +531,17 @@ namespace Unifi.IpManager.Services
                 }
                 else
                 {
-                    foreach (var client in data.data)
+                    foreach (var client in data.Data)
                     {
                         devicesClients.Add(new UniClient
                         {
-                            Id = client._id,
-                            FixedIp = client.config_network.ip,
-                            Name = client.name,
-                            Mac = client.mac,
+                            Id = client.Id,
+                            FixedIp = client.Network.Ip,
+                            Name = client.Name,
+                            Mac = client.Mac,
                             UseFixedIp = true,
                             ObjectType = "device",
-                            IpGroup = IpService.GetIpGroupForAddress(client.config_network.ip)
+                            IpGroup = IpService.GetIpGroupForAddress(client.Network.Ip)
                         });
                     }
                     result.MarkSuccessful(devicesClients);
