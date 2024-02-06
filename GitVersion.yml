@@ -1,21 +1,18 @@
 assembly-versioning-scheme: MajorMinorPatchTag
 continuous-delivery-fallback-tag: ''
+merge-message-formats:
+  pull-request: 'Merge pull request \#(?<PullRequestNumber>\d+) from'
 mode: Mainline
 branches:
   master:
     regex: main
-    tag: ''
+    tag: ""
     increment: Patch
-    prevent-increment-of-merged-branch-version: true
-    track-merge-target: false
-    tracks-release-branches: false
-    is-release-branch: false
+    is-mainline: true
   feature:
     regex: features?[/-]
+    source-branches:
+    - master
     increment: None
-    prevent-increment-of-merged-branch-version: true
-    track-merge-target: false
-    tracks-release-branches: false
-    is-release-branch: false
 ignore:
   sha: []
