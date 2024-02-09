@@ -31,6 +31,7 @@ extends:
     artifactZipName: Unifi.IpManager
     dockerImageFileName: unifi_ipmanager
     dockerImageName: spydersoft/ha/unifi.ipmanager
+    dockerFilePath: Dockerfile.simple
     imageTagVariableName: unifi_ipmanager
     helmfileRepoName: helmfileconfig
     ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
