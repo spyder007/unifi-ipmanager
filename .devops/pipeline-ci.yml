@@ -29,7 +29,6 @@ extends:
     publishProject: Unifi.IpManager/Unifi.IpManager.csproj
     artifactName: unifiIpManager
     artifactZipName: Unifi.IpManager
-    dockerImageFileName: unifi_ipmanager
     dockerImageName: spydersoft/ha/unifi.ipmanager
     dockerFilePath: Dockerfile.simple
     imageTagVariableName: unifi_ipmanager
