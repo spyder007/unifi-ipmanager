@@ -32,7 +32,7 @@ extends:
     netCoreVersion: '8.0.x'
     artifactName: unifiIpManager
     artifactZipName: Unifi.IpManager
-    dockerFilePath: unifi_ipmanager
+    dockerFilePath: Dockerfile.simple
     dockerImageName: spydersoft/ha/unifi.ipmanager
     imageTagVariableName: unifi_ipmanager
     helmfileRepoName: helmfileconfig
