@@ -28,7 +28,7 @@ try
     var app = builder.Build();
     startup.Configure(app, app.Environment);
 
-    app.Run();
+    await app.RunAsync();
 }
 catch (Exception ex)
 {
@@ -37,5 +37,5 @@ catch (Exception ex)
 finally
 {
     Log.Information("Unifi.IpManager shut down complete");
-    Log.CloseAndFlush();
+    await Log.CloseAndFlushAsync();
 }

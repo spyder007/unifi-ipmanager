@@ -9,21 +9,14 @@ using System.Threading.Tasks;
 
 namespace Unifi.IpManager.Services
 {
-    public class IpService : IIpService
+    public class IpService(IOptions<IpOptions> options, ILogger<UnifiService> logger, IDistributedCache distributedCache) : IIpService
     {
-        private IpOptions IpOptions { get; }
-        private ILogger Logger { get; }
+        private IpOptions IpOptions { get; } = options.Value;
+        private ILogger Logger { get; } = logger;
 
-        private IDistributedCache Cache { get; }
+        private IDistributedCache Cache { get; } = distributedCache;
 
         private const string IpCooldownCacheKeyTemplate = "Unifi.IpManager.IpCooldown.{0}";
-
-        public IpService(IOptions<IpOptions> options, ILogger<UnifiService> logger, IDistributedCache distributedCache)
-        {
-            IpOptions = options.Value;
-            Logger = logger;
-            Cache = distributedCache;
-        }
 
         public async Task<string> GetUnusedGroupIpAddress(string name, List<string> usedIps)
         {
@@ -53,7 +46,7 @@ namespace Unifi.IpManager.Services
                     }
                 }
             }
-            Logger.LogWarning("No open IPs found for {groupName}", ipGroup.Name);
+            Logger.LogWarning("No open IPs found for {GroupName}", ipGroup.Name);
             return string.Empty;
         }
 
@@ -84,9 +77,9 @@ namespace Unifi.IpManager.Services
             var cachedIp = await Cache.GetAsync(cacheKey);
             if (cachedIp == null)
             {
-                var options =
+                var dnsOptions =
                     new DistributedCacheEntryOptions().SetAbsoluteExpiration(DateTime.Now.AddMinutes(IpOptions.IpCooldownMinutes));
-                await Cache.SetAsync(cacheKey, Encoding.UTF8.GetBytes(ipAddress), options);
+                await Cache.SetAsync(cacheKey, Encoding.UTF8.GetBytes(ipAddress), dnsOptions);
             }
         }
 

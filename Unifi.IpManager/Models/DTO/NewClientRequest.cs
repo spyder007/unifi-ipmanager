@@ -2,11 +2,11 @@
 {
     public class NewClientRequest : EditClientRequest
     {
-        public string MacAddress { get; set; }
-        public string IpAddress { get; set; }
+        public required string MacAddress { get; set; }
+        public required string IpAddress { get; set; }
 
-        public bool SyncDns { get; set; }
+        public required bool SyncDns { get; set; }
 
-        public bool StaticIp { get; set; }
+        public required bool StaticIp { get; set; }
     }
 }

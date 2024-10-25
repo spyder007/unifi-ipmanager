@@ -87,8 +87,8 @@ namespace Unifi.IpManager.Services
 
             if (data.Meta.Rc == UniMeta.ErrorResponse)
             {
-                Logger.LogError("Error retrieving clients from {url}: {message}", UnifiOptions.Url, data.Meta.Msg);
-                return new List<UniClient>();
+                Logger.LogError("Error retrieving clients from {Url}: {Message}", UnifiOptions.Url, data.Meta.Msg);
+                return [];
             }
             else
             {
@@ -202,8 +202,8 @@ namespace Unifi.IpManager.Services
 
             if (csrfToken != null)
             {
-                Logger.LogDebug("CSRF = {csrf}", csrfToken.Value);
-                Logger.LogDebug("Payload String = {payload}", postRequestString);
+                Logger.LogDebug("CSRF = {Csrf}", csrfToken.Value);
+                Logger.LogDebug("Payload String = {Payload}", postRequestString);
                 try
                 {
                     var noteResult = await UnifiOptions.Url
@@ -215,7 +215,7 @@ namespace Unifi.IpManager.Services
 
                     if (noteResult.Meta.Rc == UniMeta.ErrorResponse)
                     {
-                        Logger.LogError("Error updating client to {url}: {message}", UnifiOptions.Url, noteResult.Meta.Msg);
+                        Logger.LogError("Error updating client to {Url}: {Message}", UnifiOptions.Url, noteResult.Meta.Msg);
                         result.MarkFailed($"Error updating client to {UnifiOptions.Url}: {noteResult.Meta.Msg}");
                     }
                     else
@@ -297,7 +297,7 @@ namespace Unifi.IpManager.Services
 
             if (addResult.Success && syncDns && !await DnsService.AddDnsARecord(addResult.Data.Hostname, addResult.Data.FixedIp, null))
             {
-                Logger.LogError("Unable to create DNS Record for {hostName}:{ip}", addResult.Data.Hostname, addResult.Data.FixedIp);
+                Logger.LogError("Unable to create DNS Record for {HostName}:{Ip}", addResult.Data.Hostname, addResult.Data.FixedIp);
             }
 
             return addResult;
@@ -320,7 +320,7 @@ namespace Unifi.IpManager.Services
                     && (clientResult.Data.Notes.SyncDnsHostName ?? false)
                     && !await DnsService.DeleteDnsARecord(clientResult.Data.Hostname, clientResult.Data.FixedIp, null))
                 {
-                    Logger.LogError("Unable to remove DNS Record for {hostName}:{ip}", clientResult.Data.Hostname,
+                    Logger.LogError("Unable to remove DNS Record for {HostName}:{Ip}", clientResult.Data.Hostname,
                         clientResult.Data.FixedIp);
                 }
 
@@ -342,8 +342,8 @@ namespace Unifi.IpManager.Services
 
             if (csrfToken != null)
             {
-                Logger.LogDebug("CSRF = {csrf}", csrfToken.Value);
-                Logger.LogDebug("Payload String = {payload}", postRequestString);
+                Logger.LogDebug("CSRF = {Csrf}", csrfToken.Value);
+                Logger.LogDebug("Payload String = {Payload}", postRequestString);
                 try
                 {
                     var noteResult = await UnifiOptions.Url
@@ -355,7 +355,7 @@ namespace Unifi.IpManager.Services
 
                     if (noteResult.Meta.Rc == UniMeta.ErrorResponse)
                     {
-                        Logger.LogError("Error deleting editClientRequest : {message}", noteResult.Meta.Msg);
+                        Logger.LogError("Error deleting editClientRequest : {Message}", noteResult.Meta.Msg);
                         result.MarkFailed($"Error deleting editClientRequest : {noteResult.Meta.Msg}");
                     }
                     else
@@ -389,8 +389,8 @@ namespace Unifi.IpManager.Services
 
             if (csrfToken != null)
             {
-                Logger.LogDebug("CSRF = {csrf}", csrfToken.Value);
-                Logger.LogDebug("Payload String = {payload}", addRequestString);
+                Logger.LogDebug("CSRF = {Csrf}", csrfToken.Value);
+                Logger.LogDebug("Payload String = {Payload}", addRequestString);
                 try
                 {
                     var addResult = await UnifiOptions.Url
@@ -402,7 +402,7 @@ namespace Unifi.IpManager.Services
 
                     if (addResult.Meta.Rc == UniMeta.ErrorResponse)
                     {
-                        Logger.LogError("Error adding client to {url}: {message}", UnifiOptions.Url, addResult.Meta.Msg);
+                        Logger.LogError("Error adding client to {Url}: {Message}", UnifiOptions.Url, addResult.Meta.Msg);
                         result.MarkFailed($"Error adding client to {UnifiOptions.Url}: {addResult.Meta.Msg}");
                         return result;
                     }
@@ -441,7 +441,7 @@ namespace Unifi.IpManager.Services
 
                 if (data.Meta.Rc == UniMeta.ErrorResponse)
                 {
-                    Logger.LogError("Error retrieving client from {url}: {message}", UnifiOptions.Url, data.Meta.Msg);
+                    Logger.LogError("Error retrieving client from {Url}: {Message}", UnifiOptions.Url, data.Meta.Msg);
                 }
                 else
                 {
@@ -473,7 +473,7 @@ namespace Unifi.IpManager.Services
 
                 if (data.Meta.Rc == UniMeta.ErrorResponse)
                 {
-                    Logger.LogError("Error retrieving client from {url}: {message}", UnifiOptions.Url, data.Meta.Msg);
+                    Logger.LogError("Error retrieving client from {Url}: {Message}", UnifiOptions.Url, data.Meta.Msg);
                 }
                 else
                 {
@@ -526,7 +526,7 @@ namespace Unifi.IpManager.Services
                 if (data.Meta.Rc == UniMeta.ErrorResponse)
                 {
                     string message = data.Meta.Msg;
-                    Logger.LogError("Error retrieving clients from {url}: {message}", UnifiOptions.Url, message);
+                    Logger.LogError("Error retrieving clients from {Url}: {Message}", UnifiOptions.Url, message);
                     result.MarkFailed($"Error retrieving clients from {UnifiOptions.Url}: {data.Meta.Msg}");
                 }
                 else
@@ -576,10 +576,10 @@ namespace Unifi.IpManager.Services
                     var errorResponse = await ex.GetResponseJsonAsync<UniResponse<List<string>>>();
                     if (errorResponse.Meta.Rc == UniMeta.ErrorResponse)
                     {
-                        Logger.LogError("Error logging on to {url}: {message}", UnifiOptions.Url, errorResponse.Meta.Msg);
+                        Logger.LogError("Error logging on to {Url}: {Message}", UnifiOptions.Url, errorResponse.Meta.Msg);
                         return false;
                     }
-                    Logger.LogDebug("Error Logging in: URL - {url}, UserName - {username}, {password}", UnifiOptions.Url, UnifiOptions.Username, UnifiOptions.Password);
+                    Logger.LogDebug("Error Logging in: URL - {Url}, UserName - {UserName}, {Password}", UnifiOptions.Url, UnifiOptions.Username, UnifiOptions.Password);
                     Logger.LogError(ex, "Error logging in to Unifi Controller");
                     return false;
                 }

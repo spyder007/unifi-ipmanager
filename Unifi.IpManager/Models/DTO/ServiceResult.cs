@@ -25,8 +25,8 @@ namespace Unifi.IpManager.Models.DTO
 
         public ServiceResult()
         {
-            Errors = new List<string>();
-            Messages = new List<string>();
+            Errors = [];
+            Messages = [];
         }
 
         public virtual void MarkSuccessful()
