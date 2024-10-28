@@ -13,10 +13,10 @@ namespace Unifi.IpManager.Models.DTO
 
         [JsonProperty("Static_ip")]
         [JsonPropertyName("Static_ip")]
-        public bool StaticIp { get; set; }
+        public required bool StaticIp { get; set; }
 
         [JsonPropertyName("Sync_dns")]
         [JsonProperty("Sync_dns")]
-        public bool SyncDns { get; set; }
+        public required bool SyncDns { get; set; }
     }
 }

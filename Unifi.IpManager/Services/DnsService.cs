@@ -9,22 +9,16 @@ using System.Linq;
 
 namespace Unifi.IpManager.Services
 {
-    public class DnsService : IDnsService
+    public class DnsService(ILogger<DnsService> logger, IOptions<DnsServiceOptions> dnsOptions) : IDnsService
     {
-        private readonly ILogger<DnsService> _logger;
-        private readonly DnsServiceOptions _options;
-
-        public DnsService(ILogger<DnsService> logger, IOptions<DnsServiceOptions> dnsOptions)
-        {
-            _logger = logger;
-            _options = dnsOptions.Value;
-        }
+        private readonly ILogger<DnsService> _logger = logger;
+        private readonly DnsServiceOptions _options = dnsOptions.Value;
 
         public async Task<bool> AddDnsARecord(string hostname, string ip, string zone)
         {
             if (string.IsNullOrEmpty(_options.Url))
             {
-                _logger.LogInformation("DNS Service not configured.  Ignoring AddDnsARecord({hostname}, {ip}, {zone})", hostname, ip, zone);
+                _logger.LogInformation("DNS Service not configured.  Ignoring AddDnsARecord({HostName}, {Ip}, {Zone})", hostname, ip, zone);
                 return true;
             }
 
@@ -56,7 +50,7 @@ namespace Unifi.IpManager.Services
         {
             if (string.IsNullOrEmpty(_options.Url))
             {
-                _logger.LogInformation("DNS Service not configured.  Ignoring BulkCreateDnsRecord - {count} records", dnsRecords.Count());
+                _logger.LogInformation("DNS Service not configured.  Ignoring BulkCreateDnsRecord - {Count} records", dnsRecords.Count());
                 return true;
             }
             using var httpClient = new HttpClient();
@@ -90,7 +84,7 @@ namespace Unifi.IpManager.Services
         {
             if (string.IsNullOrEmpty(_options.Url))
             {
-                _logger.LogInformation("DNS Service not configured.  Ignoring DeleteDnsRecord({hostname}, {ip}, {zone})", dnsRecord.HostName, dnsRecord.Data, dnsRecord.ZoneName);
+                _logger.LogInformation("DNS Service not configured.  Ignoring DeleteDnsRecord({Hostname}, {Ip}, {Zone})", dnsRecord.HostName, dnsRecord.Data, dnsRecord.ZoneName);
                 return true;
             }
 
@@ -116,8 +110,8 @@ namespace Unifi.IpManager.Services
         {
             if (string.IsNullOrEmpty(_options.Url))
             {
-                _logger.LogInformation("DNS Service not configured.  Ignoring GetDnsRecordsForHostname({hostname}, {zone})", hostname, zone);
-                return new List<DnsRecord>();
+                _logger.LogInformation("DNS Service not configured.  Ignoring GetDnsRecordsForHostname({Hostname}, {Zone})", hostname, zone);
+                return [];
             }
 
             try
@@ -132,7 +126,7 @@ namespace Unifi.IpManager.Services
             }
             catch (ApiException ex)
             {
-                _logger.LogError(ex, "Error Retrieving Dns Records for Hostname {hostname} | {zone}", hostname, zone);
+                _logger.LogError(ex, "Error Retrieving Dns Records for Hostname {Hostname} | {Zone}", hostname, zone);
                 return null;
             }
         }

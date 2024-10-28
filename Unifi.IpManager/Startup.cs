@@ -33,7 +33,7 @@ namespace Unifi.IpManager
                     options.Authority = Configuration.GetValue<string>("Identity:AuthorityUrl");
                     options.Audience = Configuration.GetValue<string>("Identity:ApiName");
 
-                    options.TokenValidationParameters.ValidTypes = new[] { "at+jwt" };
+                    options.TokenValidationParameters.ValidTypes = ["at+jwt"];
 
                 });
 
@@ -72,7 +72,7 @@ namespace Unifi.IpManager
                 options.AddDefaultPolicy(builder =>
                                 {
                                     var origins = Configuration.GetSection("AllowedOrigins").Get<string[]>();
-                                    Log.Warning("Allowed Origins: {origins}", origins);
+                                    Log.Warning("Allowed Origins: {Origins}", origins);
                                     builder.WithOrigins(origins)
                                                         .AllowAnyHeader()
                                                         .AllowAnyMethod();

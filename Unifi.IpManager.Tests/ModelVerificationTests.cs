@@ -157,14 +157,14 @@ namespace Unifi.IpManager.Tests
             var ipGroup = new IpGroup
             {
                 Name = "test",
-                Blocks = new List<IpBlock>
-                {
+                Blocks =
+                [
                     new()
                     {
                         Min = 0,
                         Max = 100
                     }
-                }
+                ]
 
             };
 

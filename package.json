@@ -1,28 +1,11 @@
 {
-  "name": "unifi.ipmanager",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "dotnet test",
-    "prepare": "husky install"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/spyder007/unifi-ipmanager"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/spyder007/unifi-ipmanager/issues"
-  },
-  "homepage": "https://github.com/spyder007/unifi-ipmanager",
+  "name": "unifi-ipmanager",
+  "packageManager": "yarn@4.5.1",
   "devDependencies": {
-    "husky": "^8.0.0",
-    "lint-staged": "^13.1.0"
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10"
   },
-  "lint-staged": {
-    "*.cs": "dotnet format --include"
+  "scripts": {
+    "prepare": "husky"
   }
 }

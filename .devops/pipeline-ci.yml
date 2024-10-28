@@ -19,26 +19,36 @@ trigger:
     exclude:
       - README.md
 
-pr: none
+pr:
+  branches:
+    include:
+      - main
 
 extends:
-  template: stages/stages-build-docker-update-helm/v1.yml@templates
+  template: pipelines/build-api/v1.yml@templates
   parameters:
     buildProject: Unifi.IpManager.sln
     publishProject: Unifi.IpManager/Unifi.IpManager.csproj
+    netCoreVersion: '8.0.x'
     artifactName: unifiIpManager
     artifactZipName: Unifi.IpManager
-    dockerImageFileName: unifi_ipmanager
+    dockerFilePath: Dockerfile.simple
     dockerImageName: spydersoft/ha/unifi.ipmanager
     imageTagVariableName: unifi_ipmanager
     helmfileRepoName: helmfileconfig
     execute_sonar: true
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      updateHelmConfig: false
+      buildAndPublishDockerImage: false
+    ${{ else }}:
+      updateHelmConfig: true
+      buildAndPublishDockerImage: true
+    sonar_endpoint_name: sonarcloud-spydersoft
+    sonar_project_key: spyder007_unifi-ipmanager
+    sonar_project_name: unifi-ipmanager
     execute_tests: true
     test_projects: '**/*.Tests/*.csproj'
     use_sonarcloud: true
     sonar_cloud_organization: spydersoft-mjg
-    sonar_endpoint_name: sonarcloud-spydersoft
-    sonar_project_name: unifi-ipmanager
-    sonar_project_key: spyder007_unifi-ipmanager
 
     
