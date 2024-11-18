@@ -45,7 +45,7 @@ extends:
     ${{ else }}:
       updateHelmConfig: true
       buildAndPublishDockerImage: true
-    sonar_EndpointName: sonarcloud-spydersoft
+    sonarEndpointName: sonarcloud-spydersoft
     sonarProjectKey: spyder007_unifi-ipmanager
     sonarProjectName: unifi-ipmanager
     executeTests: true
