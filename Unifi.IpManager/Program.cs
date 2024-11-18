@@ -1,11 +1,11 @@
 ﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using Spydersoft.Platform.Hosting.Options;
 using Spydersoft.Platform.Hosting.StartupExtensions;
 using Unifi.IpManager.Options;
 using Unifi.IpManager.Services;
@@ -15,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddSpydersoftTelemetry(typeof(Program).Assembly);
 builder.AddSpydersoftSerilog();
+AppHealthCheckOptions healthCheckOptions = builder.AddSpydersoftHealthChecks();
 
 _ = builder.Services.AddSingleton(() => builder.Configuration)
            .AddApiVersioning(options =>
@@ -67,15 +68,13 @@ _ = builder.Services.AddCors(options =>
     });
 });
 
-_ = builder.Services.AddHealthChecks();
-
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     _ = app.UseDeveloperExceptionPage();
 }
 
-_ = app.UseHealthChecks("/healthz", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") })
+_ = app.UseSpydersoftHealthChecks(healthCheckOptions)
     .UseOpenApi()
     .UseAuthentication(authInstalled)
     .UseRouting()
