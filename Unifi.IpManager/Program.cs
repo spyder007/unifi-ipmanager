@@ -1,41 +1,97 @@
-﻿using System;
+﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
-using Unifi.IpManager;
+using Spydersoft.Platform.Hosting.Options;
+using Spydersoft.Platform.Hosting.StartupExtensions;
+using Unifi.IpManager.Options;
+using Unifi.IpManager.Services;
 
-var baseConfig = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json")
-    .Build();
 
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(baseConfig)
-    .CreateBootstrapLogger();
+var builder = WebApplication.CreateBuilder(args);
 
-try
+bool isNswag = builder.Environment.EnvironmentName == "NSwag";
+
+AppHealthCheckOptions healthCheckOptions = new();
+if (!isNswag)
 {
-    Log.Information("Unifi.IpManager starting.");
-    var builder = WebApplication.CreateBuilder(args);
+    builder.AddSpydersoftTelemetry(typeof(Program).Assembly)
+        .AddSpydersoftSerilog();
+    healthCheckOptions = builder.AddSpydersoftHealthChecks();
+}
 
-    _ = builder.Host.UseSerilog((context, services, configuration) =>
+_ = builder.Services.AddSingleton(() => builder.Configuration)
+           .AddApiVersioning(options =>
+           {
+               options.DefaultApiVersion = new ApiVersion(1, 0);
+               options.AssumeDefaultVersionWhenUnspecified = true;
+           });
+
+bool authInstalled = builder.AddSpydersoftIdentity();
+
+_ = builder.Services.AddMvcCore(options =>
     {
-        _ = configuration.ReadFrom.Configuration(context.Configuration);
+        options.EnableEndpointRouting = false;
+    })
+    .AddAuthorization()
+    .AddApiExplorer()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     });
 
-    var startup = new Startup(builder.Configuration);
-    startup.ConfigureServices(builder.Services);
+var cacheConnection = builder.Configuration.GetConnectionString("RedisCache");
+_ = !string.IsNullOrEmpty(cacheConnection)
+    ? builder.Services.AddStackExchangeRedisCache(options => options.Configuration = cacheConnection)
+    : builder.Services.AddDistributedMemoryCache();
 
-    var app = builder.Build();
-    startup.Configure(app, app.Environment);
+_ = builder.Services.Configure<DnsServiceOptions>(builder.Configuration.GetSection(DnsServiceOptions.SectionName));
+_ = builder.Services.Configure<UnifiControllerOptions>(builder.Configuration.GetSection(UnifiControllerOptions.SectionName));
+_ = builder.Services.Configure<IpOptions>(builder.Configuration.GetSection(IpOptions.SectionName));
+_ = builder.Services.AddScoped<IDnsService, DnsService>();
+_ = builder.Services.AddScoped<IUnifiService, UnifiService>();
+_ = builder.Services.AddScoped<IIpService, IpService>();
+_ = builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
-    await app.RunAsync();
-}
-catch (Exception ex)
+_ = builder.Services.AddOpenApiDocument(doc =>
 {
-    Log.Fatal(ex, "Unifi.IpManager failed to start.");
-}
-finally
+    doc.DocumentName = "Unifi.IpManager";
+    doc.Title = "Unifi IP Manager API";
+    doc.Description = "API Wrapper for the Unifi Controller";
+});
+_ = builder.Services.AddCors(options =>
 {
-    Log.Information("Unifi.IpManager shut down complete");
-    await Log.CloseAndFlushAsync();
+    options.AddDefaultPolicy(policyBuilder =>
+    {
+        var origins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+        Log.Warning("Allowed Origins: {Origins}", origins);
+        _ = policyBuilder.WithOrigins(origins)
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+    });
+});
+
+var app = builder.Build();
+if (app.Environment.IsDevelopment())
+{
+    _ = app.UseDeveloperExceptionPage();
 }
+
+if (!isNswag)
+{
+    _ = app.UseSpydersoftHealthChecks(healthCheckOptions);
+}
+
+_ = app
+    .UseOpenApi()
+    .UseAuthentication(authInstalled)
+    .UseRouting()
+    .UseCors()
+    .UseAuthorization(authInstalled);
+
+_ = app.MapControllers();
+
+await app.RunAsync();

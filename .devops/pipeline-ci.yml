@@ -32,23 +32,25 @@ extends:
     netCoreVersion: '8.0.x'
     artifactName: unifiIpManager
     artifactZipName: Unifi.IpManager
+    containerRegistryName: github-spydersoft-docker
     dockerFilePath: Dockerfile.simple
-    dockerImageName: spydersoft/ha/unifi.ipmanager
+    dockerImageName: spyder007/unifi-ipmanager
     imageTagVariableName: unifi_ipmanager
     helmfileRepoName: helmfileconfig
-    execute_sonar: true
+    executeSonar: true
+    externalFeedCredentials: SpydersoftGithub
     ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
       updateHelmConfig: false
       buildAndPublishDockerImage: false
     ${{ else }}:
       updateHelmConfig: true
       buildAndPublishDockerImage: true
-    sonar_endpoint_name: sonarcloud-spydersoft
-    sonar_project_key: spyder007_unifi-ipmanager
-    sonar_project_name: unifi-ipmanager
-    execute_tests: true
-    test_projects: '**/*.Tests/*.csproj'
-    use_sonarcloud: true
-    sonar_cloud_organization: spydersoft-mjg
+    sonarEndpointName: sonarcloud-spydersoft
+    sonarProjectKey: spyder007_unifi-ipmanager
+    sonarProjectName: unifi-ipmanager
+    executeTests: true
+    testProjects: '**/*.Tests/*.csproj'
+    useSonarCloud: true
+    sonarCloudOrganization: spydersoft-mjg
 
     

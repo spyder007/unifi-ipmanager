@@ -2,6 +2,11 @@
 #For more information, please see https://aka.ms/containercompat
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy AS base
+
+LABEL org.opencontainers.image.source=https://github.com/spyder007/unifi-ipmanager
+LABEL org.opencontainers.image.description="Unifi IP Manager Data API"
+LABEL org.opencontainers.image.licenses=MIT
+
 WORKDIR /app
 COPY . /app
 
