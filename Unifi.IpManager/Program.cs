@@ -13,9 +13,15 @@ using Unifi.IpManager.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddSpydersoftTelemetry(typeof(Program).Assembly);
-builder.AddSpydersoftSerilog();
-AppHealthCheckOptions healthCheckOptions = builder.AddSpydersoftHealthChecks();
+bool isNswag = builder.Environment.EnvironmentName == "NSwag";
+
+AppHealthCheckOptions healthCheckOptions = new();
+if (!isNswag)
+{
+    builder.AddSpydersoftTelemetry(typeof(Program).Assembly)
+        .AddSpydersoftSerilog();
+    healthCheckOptions = builder.AddSpydersoftHealthChecks();
+}
 
 _ = builder.Services.AddSingleton(() => builder.Configuration)
            .AddApiVersioning(options =>
@@ -74,7 +80,12 @@ if (app.Environment.IsDevelopment())
     _ = app.UseDeveloperExceptionPage();
 }
 
-_ = app.UseSpydersoftHealthChecks(healthCheckOptions)
+if (!isNswag)
+{
+    _ = app.UseSpydersoftHealthChecks(healthCheckOptions);
+}
+
+_ = app
     .UseOpenApi()
     .UseAuthentication(authInstalled)
     .UseRouting()
