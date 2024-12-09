@@ -30,6 +30,7 @@ extends:
     buildProject: Unifi.IpManager.sln
     publishProject: Unifi.IpManager/Unifi.IpManager.csproj
     netCoreVersion: '8.0.x'
+    gitVersionSpec: '6.x'
     artifactName: unifiIpManager
     artifactZipName: Unifi.IpManager
     containerRegistryName: github-spydersoft-docker
