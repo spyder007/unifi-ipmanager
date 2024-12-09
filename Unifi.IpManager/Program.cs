@@ -10,18 +10,12 @@ using Spydersoft.Platform.Hosting.StartupExtensions;
 using Unifi.IpManager.Options;
 using Unifi.IpManager.Services;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
-bool isNswag = builder.Environment.EnvironmentName == "NSwag";
-
 AppHealthCheckOptions healthCheckOptions = new();
-if (!isNswag)
-{
-    builder.AddSpydersoftTelemetry(typeof(Program).Assembly)
+builder.AddSpydersoftTelemetry(typeof(Program).Assembly)
         .AddSpydersoftSerilog();
-    healthCheckOptions = builder.AddSpydersoftHealthChecks();
-}
+healthCheckOptions = builder.AddSpydersoftHealthChecks();
 
 _ = builder.Services.AddSingleton(() => builder.Configuration)
            .AddApiVersioning(options =>
@@ -80,10 +74,7 @@ if (app.Environment.IsDevelopment())
     _ = app.UseDeveloperExceptionPage();
 }
 
-if (!isNswag)
-{
-    _ = app.UseSpydersoftHealthChecks(healthCheckOptions);
-}
+_ = app.UseSpydersoftHealthChecks(healthCheckOptions);
 
 _ = app
     .UseOpenApi()

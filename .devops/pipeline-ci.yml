@@ -37,7 +37,6 @@ extends:
     dockerImageName: spyder007/unifi-ipmanager
     imageTagVariableName: unifi_ipmanager
     helmfileRepoName: helmfileconfig
-    executeSonar: true
     externalFeedCredentials: SpydersoftGithub
     ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
       updateHelmConfig: false
@@ -45,6 +44,7 @@ extends:
     ${{ else }}:
       updateHelmConfig: true
       buildAndPublishDockerImage: true
+    executeSonar: true
     sonarEndpointName: sonarcloud-spydersoft
     sonarProjectKey: spyder007_unifi-ipmanager
     sonarProjectName: unifi-ipmanager
