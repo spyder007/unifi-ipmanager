@@ -1,18 +1,17 @@
-assembly-versioning-scheme: MajorMinorPatchTag
-continuous-delivery-fallback-tag: ''
+workflow: GitHubFlow/v1
 merge-message-formats:
   pull-request: 'Merge pull request \#(?<PullRequestNumber>\d+) from'
-mode: Mainline
 branches:
-  master:
-    regex: main
-    tag: ""
-    increment: Patch
-    is-mainline: true
   feature:
-    regex: features?[/-]
+    mode: ContinuousDelivery
+  tags:
+    mode: ManualDeployment
+    label: ''
+    increment: Inherit
+    prevent-increment:
+      when-current-commit-tagged: true
     source-branches:
-    - master
-    increment: None
-ignore:
-  sha: []
+    - main
+    track-merge-message: true
+    regex: ^tags?[/-](?<BranchName>.+)
+    is-main-branch: true
