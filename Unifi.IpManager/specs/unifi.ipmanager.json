@@ -467,6 +467,10 @@
               },
               "staticIp": {
                 "type": "boolean"
+              },
+              "network": {
+                "type": "string",
+                "nullable": true
               }
             }
           }
@@ -516,6 +520,10 @@
           },
           "Sync_dns": {
             "type": "boolean"
+          },
+          "network": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -669,6 +677,14 @@
           "password": {
             "type": "string",
             "description": "Gets or sets the client secret.",
+            "nullable": true
+          },
+          "isUnifiOs": {
+            "type": "boolean",
+            "description": "Gets or sets a value indicating whether this instance is on Unifi OS."
+          },
+          "site": {
+            "type": "string",
             "nullable": true
           }
         }

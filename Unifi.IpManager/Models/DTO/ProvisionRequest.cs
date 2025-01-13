@@ -18,5 +18,7 @@ namespace Unifi.IpManager.Models.DTO
         [JsonPropertyName("Sync_dns")]
         [JsonProperty("Sync_dns")]
         public required bool SyncDns { get; set; }
+
+        public string Network { get; set; }
     }
 }

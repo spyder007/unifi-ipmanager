@@ -72,7 +72,7 @@ namespace Unifi.IpManager.Controllers
         public async Task<ActionResult<ServiceResult<UniClient>>> ProvisionClient([FromBody] ProvisionRequest request)
         {
             _logger.LogTrace("Processing request for provision client");
-            return await IUnifyService.ProvisionNewClient(request.Group, request.Name, request.HostName, request.StaticIp, request.SyncDns);
+            return await IUnifyService.ProvisionNewClient(request);
         }
     }
 }

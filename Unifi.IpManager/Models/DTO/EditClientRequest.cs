@@ -13,5 +13,6 @@ namespace Unifi.IpManager.Models.DTO
         public string Hostname { get; set; }
 
         public UniNote Notes { get; set; }
+
     }
 }

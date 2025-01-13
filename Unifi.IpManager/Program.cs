@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using Flurl.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -25,6 +26,18 @@ _ = builder.Services.AddSingleton(() => builder.Configuration)
            });
 
 bool authInstalled = builder.AddSpydersoftIdentity();
+
+FlurlHttp.Clients.WithDefaults(builder =>
+    builder.ConfigureInnerHandler(ih =>
+    {
+#pragma warning disable S4830 // Unifi local does not have a valid SSL certificate
+        ih.ServerCertificateCustomValidationCallback = (message, _, _, _) =>
+        {
+            return true;
+        };
+#pragma warning restore S4830 // Unifi local does not have a valid SSL certificate
+    })
+);
 
 _ = builder.Services.AddMvcCore(options =>
     {

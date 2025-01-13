@@ -8,5 +8,7 @@
         public required bool SyncDns { get; set; }
 
         public required bool StaticIp { get; set; }
+
+        public required string Network { get; set; }
     }
 }
