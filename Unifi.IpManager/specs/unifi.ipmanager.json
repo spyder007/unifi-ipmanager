@@ -670,6 +670,10 @@
             "type": "string",
             "description": "Gets or sets the client secret.",
             "nullable": true
+          },
+          "isCloudGateway": {
+            "type": "boolean",
+            "description": "Gets or sets a value indicating whether this instance is cloud gateway."
           }
         }
       }

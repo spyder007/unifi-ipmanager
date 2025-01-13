@@ -14,12 +14,13 @@ using Unifi.IpManager.Models.Unifi;
 using NullValueHandling = Newtonsoft.Json.NullValueHandling;
 using UnifiRequests = Unifi.IpManager.Models.Unifi.Requests;
 using Unifi.IpManager.Options;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace Unifi.IpManager.Services
 {
     public class UnifiService(IOptions<UnifiControllerOptions> options, IIpService ipService, ILogger<UnifiService> logger, IDnsService dnsService) : IUnifiService
     {
-        private const string SiteId = "at7as3rk";
+        private const string SiteId = "default";
         private const string NetworkId = "59f62826e4b0c5498bc2a82e";
 
         private IIpService IpService { get; } = ipService;
@@ -28,6 +29,10 @@ namespace Unifi.IpManager.Services
         private UnifiControllerOptions UnifiOptions { get; } = options.Value;
         private ILogger Logger { get; } = logger;
         private CookieJar _cookieJar;
+
+        private Url BaseSiteApiUrl => UnifiOptions.IsUnifiOs
+            ? UnifiOptions.Url.AppendPathSegments("proxy", "network", "api", "s", SiteId)
+            : UnifiOptions.Url.AppendPathSegments("api", "s", SiteId);
 
         #region IUnifiService Implementation
 
@@ -82,7 +87,7 @@ namespace Unifi.IpManager.Services
 
         private async Task<IEnumerable<UniClient>> GetAllFixedIpClients()
         {
-            var data = await UnifiOptions.Url.AppendPathSegments("api", "s", SiteId, "stat", "alluser")
+            var data = await BaseSiteApiUrl.AppendPathSegments("stat", "alluser")
                 .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
 
             if (data.Meta.Rc == UniMeta.ErrorResponse)
@@ -198,18 +203,18 @@ namespace Unifi.IpManager.Services
 
             var postRequestString = JsonConvert.SerializeObject(editRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
 
-            var csrfToken = _cookieJar.FirstOrDefault(cookie => cookie.Name == "csrf_token");
+            var csrfToken = GetCsrfToken();
 
-            if (csrfToken != null)
+            if (!string.IsNullOrEmpty(csrfToken))
             {
-                Logger.LogDebug("CSRF = {Csrf}", csrfToken.Value);
+                Logger.LogDebug("CSRF = {Csrf}", csrfToken);
                 Logger.LogDebug("Payload String = {Payload}", postRequestString);
                 try
                 {
-                    var noteResult = await UnifiOptions.Url
-                        .AppendPathSegments("api", "s", SiteId, "rest", "user", clientResult.Data.Id)
+                    var noteResult = await BaseSiteApiUrl
+                        .AppendPathSegments("rest", "user", clientResult.Data.Id)
                         .WithCookies(_cookieJar)
-                        .WithHeader("X-Csrf-Token", csrfToken.Value)
+                        .WithHeader("X-Csrf-Token", csrfToken)
                         .PutStringAsync(postRequestString)
                         .ReceiveJson<UniResponse<List<UniClient>>>();
 
@@ -338,18 +343,18 @@ namespace Unifi.IpManager.Services
 
             var postRequestString = JsonConvert.SerializeObject(postRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
 
-            var csrfToken = _cookieJar.FirstOrDefault(cookie => cookie.Name == "csrf_token");
+            var csrfToken = GetCsrfToken();
 
-            if (csrfToken != null)
+            if (!string.IsNullOrEmpty(csrfToken))
             {
-                Logger.LogDebug("CSRF = {Csrf}", csrfToken.Value);
+                Logger.LogDebug("CSRF = {Csrf}", csrfToken);
                 Logger.LogDebug("Payload String = {Payload}", postRequestString);
                 try
                 {
-                    var noteResult = await UnifiOptions.Url
-                        .AppendPathSegments("api", "s", SiteId, "cmd", "stamgr")
+                    var noteResult = await BaseSiteApiUrl
+                        .AppendPathSegments("cmd", "stamgr")
                         .WithCookies(_cookieJar)
-                        .WithHeader("X-Csrf-Token", csrfToken.Value)
+                        .WithHeader("X-Csrf-Token", csrfToken)
                         .PostStringAsync(postRequestString)
                         .ReceiveJson<UniResponse<List<UniClient>>>();
 
@@ -385,18 +390,18 @@ namespace Unifi.IpManager.Services
 
             var addRequestString = JsonConvert.SerializeObject(addRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
 
-            var csrfToken = _cookieJar.FirstOrDefault(cookie => cookie.Name == "csrf_token");
+            var csrfToken = GetCsrfToken();
 
-            if (csrfToken != null)
+            if (!string.IsNullOrEmpty(csrfToken))
             {
-                Logger.LogDebug("CSRF = {Csrf}", csrfToken.Value);
+                Logger.LogDebug("CSRF = {Csrf}", csrfToken);
                 Logger.LogDebug("Payload String = {Payload}", addRequestString);
                 try
                 {
-                    var addResult = await UnifiOptions.Url
-                        .AppendPathSegments("api", "s", SiteId, "rest", "user")
+                    var addResult = await BaseSiteApiUrl
+                        .AppendPathSegments("rest", "user")
                         .WithCookies(_cookieJar)
-                        .WithHeader("X-Csrf-Token", csrfToken.Value)
+                        .WithHeader("X-Csrf-Token", csrfToken)
                         .PostStringAsync(addRequestString)
                         .ReceiveJson<UniResponse<List<UniClient>>>();
 
@@ -436,7 +441,7 @@ namespace Unifi.IpManager.Services
 
             try
             {
-                var data = await UnifiOptions.Url.AppendPathSegments("api", "s", SiteId, "rest", "user").SetQueryParam("mac", mac)
+                var data = await BaseSiteApiUrl.AppendPathSegments("rest", "user").SetQueryParam("mac", mac)
                     .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
 
                 if (data.Meta.Rc == UniMeta.ErrorResponse)
@@ -468,7 +473,7 @@ namespace Unifi.IpManager.Services
 
             try
             {
-                var data = await UnifiOptions.Url.AppendPathSegments("api", "s", SiteId, "rest", "user").SetQueryParam("mac", mac)
+                var data = await BaseSiteApiUrl.AppendPathSegments("rest", "user").SetQueryParam("mac", mac)
                     .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
 
                 if (data.Meta.Rc == UniMeta.ErrorResponse)
@@ -519,8 +524,7 @@ namespace Unifi.IpManager.Services
             try
             {
                 var devicesClients = new List<UniClient>();
-
-                var data = await UnifiOptions.Url.AppendPathSegments("api", "s", SiteId, "stat", "device")
+                var data = await BaseSiteApiUrl.AppendPathSegments("stat", "device")
                     .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniDevice>>>();
 
                 if (data.Meta.Rc == UniMeta.ErrorResponse)
@@ -569,7 +573,11 @@ namespace Unifi.IpManager.Services
 
                 try
                 {
-                    _ = await UnifiOptions.Url.AppendPathSegments("api", "login").WithCookies(out _cookieJar).PostJsonAsync(credentials).ReceiveJson<UniResponse<List<string>>>();
+                    var url = UnifiOptions.IsUnifiOs
+                        ? UnifiOptions.Url.AppendPathSegments("api", "auth", "login")
+                        : UnifiOptions.Url.AppendPathSegments("api", "login");
+
+                    _ = await url.WithCookies(out _cookieJar).PostJsonAsync(credentials).ReceiveJson<UniResponse<List<string>>>();
                 }
                 catch (FlurlHttpException ex)
                 {
@@ -603,5 +611,27 @@ namespace Unifi.IpManager.Services
             }
             return sBuilder.ToString().ToUpper();
         }
+
+        private string GetCsrfToken()
+        {
+            var csrfToken = _cookieJar.FirstOrDefault(cookie => cookie.Name == "X-Csrf-Token");
+
+            if (csrfToken != null)
+            {
+                return csrfToken.Value;
+            }
+
+            var token = _cookieJar.FirstOrDefault(cookie => cookie.Name == "TOKEN");
+
+            if (token != null)
+            {
+                var handler = new JwtSecurityTokenHandler();
+                var jsonToken = handler.ReadToken(token.Value) as JwtSecurityToken;
+                return jsonToken?.Claims.FirstOrDefault(claim => claim.Type == "csrfToken")?.Value;
+            }
+
+            return null;
+        }
+
     }
 }
