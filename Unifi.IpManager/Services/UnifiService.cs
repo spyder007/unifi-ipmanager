@@ -20,9 +20,6 @@ namespace Unifi.IpManager.Services
 {
     public class UnifiService(IOptions<UnifiControllerOptions> options, IIpService ipService, ILogger<UnifiService> logger, IDnsService dnsService) : IUnifiService
     {
-        private const string SiteId = "default";
-        private const string NetworkId = "59f62826e4b0c5498bc2a82e";
-
         private IIpService IpService { get; } = ipService;
         private IDnsService DnsService { get; } = dnsService;
 
@@ -31,10 +28,41 @@ namespace Unifi.IpManager.Services
         private CookieJar _cookieJar;
 
         private Url BaseSiteApiUrl => UnifiOptions.IsUnifiOs
-            ? UnifiOptions.Url.AppendPathSegments("proxy", "network", "api", "s", SiteId)
-            : UnifiOptions.Url.AppendPathSegments("api", "s", SiteId);
+            ? UnifiOptions.Url.AppendPathSegments("proxy", "network", "api", "s")
+            : UnifiOptions.Url.AppendPathSegments("api", "s");
+
+        private string SiteId => UnifiOptions.Site;
 
         #region IUnifiService Implementation
+
+        public async Task<ServiceResult<List<UnifiNetwork>>> GetAllNetworks()
+        {
+            var result = new ServiceResult<List<UnifiNetwork>>();
+            if (!await VerifyLogin())
+            {
+                result.MarkFailed("Login failed.");
+                return result;
+            }
+            try
+            {
+                var data = await BaseSiteApiUrl.AppendPathSegments(SiteId, "rest", "networkconf")
+                    .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UnifiNetwork>>>();
+                if (data.Meta.Rc == UniMeta.ErrorResponse)
+                {
+                    Logger.LogError("Error retrieving networks from {Url}: {Message}", UnifiOptions.Url, data.Meta.Msg);
+                    result.MarkFailed($"Error retrieving networks from {UnifiOptions.Url}: {data.Meta.Msg}");
+                }
+                else
+                {
+                    result.MarkSuccessful(data.Data);
+                }
+            }
+            catch (Exception e)
+            {
+                result.MarkFailed(e);
+            }
+            return result;
+        }
 
         public async Task<ServiceResult<List<UniClient>>> GetAllFixedClients()
         {
@@ -63,7 +91,7 @@ namespace Unifi.IpManager.Services
                 var devices = await GetDevicesAsUniClient();
                 if (devices.Success)
                 {
-                    if (devices.Data != null && devices.Data.Any())
+                    if (devices.Data != null && devices.Data.Count != 0)
                     {
                         allClients.AddRange(devices.Data);
                     }
@@ -87,7 +115,7 @@ namespace Unifi.IpManager.Services
 
         private async Task<IEnumerable<UniClient>> GetAllFixedIpClients()
         {
-            var data = await BaseSiteApiUrl.AppendPathSegments("stat", "alluser")
+            var data = await BaseSiteApiUrl.AppendPathSegments(SiteId, "stat", "alluser")
                 .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
 
             if (data.Meta.Rc == UniMeta.ErrorResponse)
@@ -148,6 +176,14 @@ namespace Unifi.IpManager.Services
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             });
 
+            var networkId = await GetNetworkId(editClientRequest.Network);
+
+            if (string.IsNullOrWhiteSpace(networkId))
+            {
+                result.MarkFailed($"Network could not be found. {editClientRequest.Network}");
+                return result;
+            }
+
             var addRequest = new UnifiRequests.AddUniClientRequest
             {
                 Mac = editClientRequest.MacAddress,
@@ -155,7 +191,7 @@ namespace Unifi.IpManager.Services
                 HostName = editClientRequest.Hostname,
                 UseFixedIp = true,
                 FixedIp = editClientRequest.IpAddress,
-                NetworkId = NetworkId,
+                NetworkId = networkId,
                 Note = noteString
             };
 
@@ -212,7 +248,7 @@ namespace Unifi.IpManager.Services
                 try
                 {
                     var noteResult = await BaseSiteApiUrl
-                        .AppendPathSegments("rest", "user", clientResult.Data.Id)
+                        .AppendPathSegments(SiteId, "rest", "user", clientResult.Data.Id)
                         .WithCookies(_cookieJar)
                         .WithHeader("X-Csrf-Token", csrfToken)
                         .PutStringAsync(postRequestString)
@@ -242,7 +278,7 @@ namespace Unifi.IpManager.Services
             return result;
         }
 
-        public async Task<ServiceResult<UniClient>> ProvisionNewClient(string group, string name, string hostName, bool staticIp, bool syncDns)
+        public async Task<ServiceResult<UniClient>> ProvisionNewClient(string group, string name, string hostName, bool staticIp, bool syncDns, string network)
         {
             var result = new ServiceResult<UniClient>();
 
@@ -279,13 +315,21 @@ namespace Unifi.IpManager.Services
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             });
 
+            var networkId = await GetNetworkId(network);
+
+            if (string.IsNullOrWhiteSpace(networkId))
+            {
+                result.MarkFailed($"Network could not be found. {network}");
+                return result;
+            }
+
             var addRequest = new UnifiRequests.AddUniClientRequest
             {
                 Mac = macAddress,
                 Name = name,
                 HostName = hostName,
                 UseFixedIp = staticIp,
-                NetworkId = NetworkId,
+                NetworkId = networkId,
                 Note = noteString
             };
 
@@ -352,7 +396,7 @@ namespace Unifi.IpManager.Services
                 try
                 {
                     var noteResult = await BaseSiteApiUrl
-                        .AppendPathSegments("cmd", "stamgr")
+                        .AppendPathSegments(SiteId, "cmd", "stamgr")
                         .WithCookies(_cookieJar)
                         .WithHeader("X-Csrf-Token", csrfToken)
                         .PostStringAsync(postRequestString)
@@ -399,7 +443,7 @@ namespace Unifi.IpManager.Services
                 try
                 {
                     var addResult = await BaseSiteApiUrl
-                        .AppendPathSegments("rest", "user")
+                        .AppendPathSegments(SiteId, "rest", "user")
                         .WithCookies(_cookieJar)
                         .WithHeader("X-Csrf-Token", csrfToken)
                         .PostStringAsync(addRequestString)
@@ -441,7 +485,7 @@ namespace Unifi.IpManager.Services
 
             try
             {
-                var data = await BaseSiteApiUrl.AppendPathSegments("rest", "user").SetQueryParam("mac", mac)
+                var data = await BaseSiteApiUrl.AppendPathSegments(SiteId, "rest", "user").SetQueryParam("mac", mac)
                     .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
 
                 if (data.Meta.Rc == UniMeta.ErrorResponse)
@@ -473,7 +517,7 @@ namespace Unifi.IpManager.Services
 
             try
             {
-                var data = await BaseSiteApiUrl.AppendPathSegments("rest", "user").SetQueryParam("mac", mac)
+                var data = await BaseSiteApiUrl.AppendPathSegments(SiteId, "rest", "user").SetQueryParam("mac", mac)
                     .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
 
                 if (data.Meta.Rc == UniMeta.ErrorResponse)
@@ -524,7 +568,7 @@ namespace Unifi.IpManager.Services
             try
             {
                 var devicesClients = new List<UniClient>();
-                var data = await BaseSiteApiUrl.AppendPathSegments("stat", "device")
+                var data = await BaseSiteApiUrl.AppendPathSegments(SiteId, "stat", "device")
                     .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniDevice>>>();
 
                 if (data.Meta.Rc == UniMeta.ErrorResponse)
@@ -633,5 +677,18 @@ namespace Unifi.IpManager.Services
             return null;
         }
 
+        private async Task<string> GetNetworkId(string networkName)
+        {
+            var networks = await GetAllNetworks();
+            if (networks.Success)
+            {
+                UnifiNetwork network = networks.Data.Find(n => n.Name == networkName);
+                if (network != null)
+                {
+                    return network.Id;
+                }
+            }
+            return null;
+        }
     }
 }

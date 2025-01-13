@@ -50,7 +50,8 @@ namespace Unifi.IpManager.Tests
                 MacAddress = "test",
                 IpAddress = "test",
                 SyncDns = true,
-                StaticIp = true
+                StaticIp = true,
+                Network = "test"
             };
 
             Assert.Multiple(() =>
@@ -60,6 +61,7 @@ namespace Unifi.IpManager.Tests
                 Assert.That(newClientRequest, Has.Property("IpAddress").TypeOf<string>());
                 Assert.That(newClientRequest, Has.Property("SyncDns").TypeOf<bool>());
                 Assert.That(newClientRequest, Has.Property("StaticIp").TypeOf<bool>());
+                Assert.That(newClientRequest, Has.Property("Network").TypeOf<string>());
             });
         }
 

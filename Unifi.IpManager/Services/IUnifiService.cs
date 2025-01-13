@@ -9,7 +9,9 @@ namespace Unifi.IpManager.Services
     {
         Task<ServiceResult<List<UniClient>>> GetAllFixedClients();
 
-        Task<ServiceResult<UniClient>> ProvisionNewClient(string group, string name, string hostName, bool staticIp, bool syncDns);
+        Task<ServiceResult<List<UnifiNetwork>>> GetAllNetworks();
+
+        Task<ServiceResult<UniClient>> ProvisionNewClient(string group, string name, string hostName, bool staticIp, bool syncDns, string network);
 
         Task<ServiceResult<UniClient>> CreateClient(NewClientRequest editClientRequest);
         Task<ServiceResult> UpdateClient(string mac, EditClientRequest editClientRequest);

@@ -29,6 +29,8 @@
         /// are requied for paths and token handling.</remarks>
         /// <value><c>true</c> if this instance is on Unifi OS; otherwise, <c>false</c>.</value>
         public bool IsUnifiOs { get; set; } = true;
+
+        public string Site { get; set; } = "default";
     }
 
 }
