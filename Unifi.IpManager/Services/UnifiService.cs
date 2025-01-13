@@ -278,7 +278,7 @@ namespace Unifi.IpManager.Services
             return result;
         }
 
-        public async Task<ServiceResult<UniClient>> ProvisionNewClient(string group, string name, string hostName, bool staticIp, bool syncDns, string network)
+        public async Task<ServiceResult<UniClient>> ProvisionNewClient(ProvisionRequest request)
         {
             var result = new ServiceResult<UniClient>();
 
@@ -305,9 +305,9 @@ namespace Unifi.IpManager.Services
 
             var note = new UniNote()
             {
-                DnsHostname = hostName,
+                DnsHostname = request.HostName,
                 SetOnDevice = false,
-                SyncDnsHostName = syncDns
+                SyncDnsHostName = request.SyncDns
             };
 
             var noteString = JsonConvert.SerializeObject(note, new JsonSerializerSettings
@@ -315,27 +315,27 @@ namespace Unifi.IpManager.Services
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             });
 
-            var networkId = await GetNetworkId(network);
+            var networkId = await GetNetworkId(request.Network);
 
             if (string.IsNullOrWhiteSpace(networkId))
             {
-                result.MarkFailed($"Network could not be found. {network}");
+                result.MarkFailed($"Network could not be found. {request.Network}");
                 return result;
             }
 
             var addRequest = new UnifiRequests.AddUniClientRequest
             {
                 Mac = macAddress,
-                Name = name,
-                HostName = hostName,
-                UseFixedIp = staticIp,
+                Name = request.Name,
+                HostName = request.HostName,
+                UseFixedIp = request.StaticIp,
                 NetworkId = networkId,
                 Note = noteString
             };
 
-            if (staticIp)
+            if (request.StaticIp)
             {
-                var assignedIp = await IpService.GetUnusedGroupIpAddress(group, clients.Select(c => c.FixedIp).ToList());
+                var assignedIp = await IpService.GetUnusedGroupIpAddress(request.Group, clients.Select(c => c.FixedIp).ToList());
                 if (!string.IsNullOrWhiteSpace(assignedIp))
                 {
                     addRequest.FixedIp = assignedIp;
@@ -344,7 +344,7 @@ namespace Unifi.IpManager.Services
 
             var addResult = await ExecuteAddUniClientRequest(addRequest);
 
-            if (addResult.Success && syncDns && !await DnsService.AddDnsARecord(addResult.Data.Hostname, addResult.Data.FixedIp, null))
+            if (addResult.Success && request.SyncDns && !await DnsService.AddDnsARecord(addResult.Data.Hostname, addResult.Data.FixedIp, null))
             {
                 Logger.LogError("Unable to create DNS Record for {HostName}:{Ip}", addResult.Data.Hostname, addResult.Data.FixedIp);
             }
