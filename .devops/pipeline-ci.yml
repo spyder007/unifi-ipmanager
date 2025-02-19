@@ -38,7 +38,7 @@ extends:
     imageTagVariableName: unifi_ipmanager
     helmfileRepoName: helmfileconfig
     externalFeedCredentials: SpydersoftGithub
-     ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranchName'], 'main')) }}:
+    ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranchName'], 'main')) }}:
       executeSonar: true
     ${{ else }}:
       executeSonar: false
