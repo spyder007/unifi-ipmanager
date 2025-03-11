@@ -38,13 +38,18 @@ extends:
     imageTagVariableName: unifi_ipmanager
     helmfileRepoName: helmfileconfig
     externalFeedCredentials: SpydersoftGithub
+    ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranchName'], 'main')) }}:
+      executeSonar: true
+    ${{ else }}:
+      executeSonar: false
+    
     ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
       updateHelmConfig: false
       buildAndPublishDockerImage: false
     ${{ else }}:
       updateHelmConfig: true
       buildAndPublishDockerImage: true
-    executeSonar: true
+    
     sonarEndpointName: sonarcloud-spydersoft
     sonarProjectKey: spyder007_unifi-ipmanager
     sonarProjectName: unifi-ipmanager
