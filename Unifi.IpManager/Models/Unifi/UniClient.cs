@@ -92,8 +92,7 @@ public class UniClient
 
     public UniNote Notes
     {
-        get
-        {
+        get {
             if (_note != null)
             {
                 return _note;

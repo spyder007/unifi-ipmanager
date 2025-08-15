@@ -508,9 +508,6 @@ public class UnifiService(
 
     private async Task<IEnumerable<UniClient>> GetAllFixedIpClients()
     {
-        var rawData = await BaseSiteApiUrl.AppendPathSegments(SiteId, "stat", "alluser")
-            .WithCookies(_cookieJar).GetStringAsync();
-
         var data = await BaseSiteApiUrl.AppendPathSegments(SiteId, "stat", "alluser")
             .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
 
