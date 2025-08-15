@@ -14,7 +14,7 @@
       "verbose": true,
       "workingDirectory": null,
       "aspNetCoreEnvironment": "NSwag",
-      "output": "specs/Unifi.IpManager.json",
+      "output": "specs/unifi.ipmanager.json",
       "newLineBehavior": "Auto"
     }
   },

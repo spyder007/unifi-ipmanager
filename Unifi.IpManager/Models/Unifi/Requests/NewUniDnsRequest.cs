@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System.Text.Json.Serialization;
 
 namespace Unifi.IpManager.Models.Unifi.Requests;
 
-public class EditUniClientRequest
+public class NewUniDnsRequest
 {
     [JsonProperty("name")]
     [JsonPropertyName("name")]
@@ -15,9 +15,9 @@ public class EditUniClientRequest
 
     [JsonProperty("usergroup_id")]
     [JsonPropertyName("usergroup_id")]
-    public string UserGroupId { get; set; }
+    public string Record { get; set; }
 
-    [JsonProperty("hostname")]
-    [JsonPropertyName("hostname")]
-    public string HostName { get; set; }
+    [JsonProperty("enabled")]
+    [JsonPropertyName("enabled")]
+    public bool Enabled { get; set; }
 }

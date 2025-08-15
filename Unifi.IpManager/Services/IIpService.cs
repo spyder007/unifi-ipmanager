@@ -1,14 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Unifi.IpManager.Services
+namespace Unifi.IpManager.Services;
+
+public interface IIpService
 {
-    public interface IIpService
-    {
-        Task<string> GetUnusedGroupIpAddress(string name, List<string> usedIps);
+    Task<string> GetUnusedGroupIpAddress(string name, List<string> usedIps);
 
-        string GetIpGroupForAddress(string ipAddress);
+    string GetIpGroupForAddress(string ipAddress);
 
-        Task ReturnIpAddress(string ipAddress);
-    }
+    Task ReturnIpAddress(string ipAddress);
 }

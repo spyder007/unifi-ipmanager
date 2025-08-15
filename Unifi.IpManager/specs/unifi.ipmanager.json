@@ -276,6 +276,27 @@
         }
       }
     },
+    "/dns": {
+      "get": {
+        "tags": [
+          "Dns"
+        ],
+        "summary": "Gets this instance.",
+        "operationId": "Dns_Get",
+        "responses": {
+          "200": {
+            "description": "ActionResult<System.String>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceResultOfListOfHostDnsRecord"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/info": {
       "get": {
         "tags": [
@@ -343,6 +364,16 @@
           "use_fixedip": {
             "type": "boolean",
             "description": "Gets or sets a value indicating whether [use fixedip]."
+          },
+          "is_wired": {
+            "type": "boolean"
+          },
+          "local_dns_record_enabled": {
+            "type": "boolean"
+          },
+          "local_dns_record": {
+            "type": "string",
+            "nullable": true
           },
           "fixed_ip": {
             "type": "string",
@@ -496,6 +527,9 @@
                 "$ref": "#/components/schemas/UniNote"
               }
             ]
+          },
+          "useLocalDns": {
+            "type": "boolean"
           }
         }
       },
@@ -639,6 +673,51 @@
           }
         }
       },
+      "ServiceResultOfListOfHostDnsRecord": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ServiceResult"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "data": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "$ref": "#/components/schemas/HostDnsRecord"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "HostDnsRecord": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "hostname": {
+            "type": "string",
+            "nullable": true
+          },
+          "ipAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "macAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "recordType": {
+            "type": "string",
+            "nullable": true
+          },
+          "deviceLock": {
+            "type": "boolean"
+          }
+        }
+      },
       "Info": {
         "type": "object",
         "description": "Class Info.",
@@ -684,6 +763,10 @@
             "description": "Gets or sets a value indicating whether this instance is on Unifi OS."
           },
           "site": {
+            "type": "string",
+            "nullable": true
+          },
+          "dnsZone": {
             "type": "string",
             "nullable": true
           }
