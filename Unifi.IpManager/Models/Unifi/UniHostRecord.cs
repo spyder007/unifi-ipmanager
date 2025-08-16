@@ -5,8 +5,12 @@ namespace Unifi.IpManager.Models.Unifi;
 
 public class UniHostRecord
 {
+    [JsonProperty("_id")]
+    [JsonPropertyName("_id")]
     public string Id { get; set; }
 
+    [JsonProperty("enabled")]
+    [JsonPropertyName("enabled")]
     public bool Enabled { get; set; }
 
     [JsonProperty("key")]
@@ -15,11 +19,11 @@ public class UniHostRecord
 
     [JsonProperty("port")]
     [JsonPropertyName("port")]
-    public int Port { get; set; }
+    public int Port { get; set; } = 0;
 
     [JsonProperty("priority")]
     [JsonPropertyName("priority")]
-    public int Priority { get; set; }
+    public int Priority { get; set; } = 0;
 
     [JsonProperty("record_type")]
     [JsonPropertyName("record_type")]
@@ -27,7 +31,7 @@ public class UniHostRecord
 
     [JsonProperty("ttl")]
     [JsonPropertyName("ttl")]
-    public int Ttl { get; set; }
+    public int Ttl { get; set; } = 0;
 
     [JsonProperty("value")]
     [JsonPropertyName("value")]
@@ -35,5 +39,5 @@ public class UniHostRecord
 
     [JsonProperty("weight")]
     [JsonPropertyName("weight")]
-    public int Weight { get; set; }
+    public int Weight { get; set; } = 0;
 }

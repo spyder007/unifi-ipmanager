@@ -4,6 +4,8 @@ namespace Unifi.IpManager.Models.DTO;
 
 public class HostDnsRecord
 {
+    public string Id { get; set; }
+
     public string Hostname { get; set; }
 
     public string IpAddress { get; set; }

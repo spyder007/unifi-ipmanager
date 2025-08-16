@@ -24,85 +24,10 @@ public class UnifiService(
     IOptions<UnifiControllerOptions> options,
     IIpService ipService,
     ILogger<UnifiService> logger,
-    IDnsService dnsService) : IUnifiService
+    IDnsService dnsService) : UnifiBaseService(options, logger), IUnifiService
 {
     private IIpService IpService { get; } = ipService;
     private IDnsService DnsService { get; } = dnsService;
-
-    private UnifiControllerOptions UnifiOptions { get; } = options.Value;
-    private ILogger Logger { get; } = logger;
-    private CookieJar _cookieJar;
-
-    private Url BaseDnsSiteUrl => UnifiOptions.IsUnifiOs
-        ? UnifiOptions.Url.AppendPathSegments("proxy", "network", "v2", "api", "site")
-        : UnifiOptions.Url.AppendPathSegments("api", "dns");
-
-    private Url BaseSiteApiUrl => UnifiOptions.IsUnifiOs
-        ? UnifiOptions.Url.AppendPathSegments("proxy", "network", "api", "s")
-        : UnifiOptions.Url.AppendPathSegments("api", "s");
-
-    private string SiteId => UnifiOptions.Site;
-
-    #region IDnsService Implementation
-
-    public async Task<ServiceResult<List<HostDnsRecord>>> GetHostDnsRecords()
-    {
-        var result = new ServiceResult<List<HostDnsRecord>>();
-        if (!await VerifyLogin())
-        {
-            result.MarkFailed("Login failed.");
-            return result;
-        }
-
-        var devices = await GetDeviceDnsRecords();
-        var dnsRecords = await GetAllStaticDns();
-
-        var allRecords = devices.Select(d => new HostDnsRecord
-        {
-            Hostname = d.Hostname,
-            IpAddress = d.IpAddress,
-            MacAddress = d.MacAddress,
-            RecordType = "A",
-            DeviceLock = true
-        }).ToList();
-
-        allRecords.AddRange(dnsRecords.Select(d => new HostDnsRecord
-        {
-            Hostname = d.Key,
-            IpAddress = d.Value,
-            RecordType = d.RecordType.ToString()
-        }));
-
-        result.MarkSuccessful(allRecords);
-
-        return result;
-    }
-
-    public Task<bool> AddDnsARecord(string hostname, string ip, string zone)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<bool> AddDnsCNameRecord(string hostname, string alias, string zone)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<bool> DeleteDnsARecord(string hostname, string ip, string zone)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<bool> DeleteDnsRecord(DnsRecord dnsRecord)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<bool> BulkCreateDnsRecords(IEnumerable<DnsRecord> dnsRecords)
-    {
-        throw new NotImplementedException();
-    }
-    #endregion
 
     #region IUnifiService Implementation
 
@@ -476,36 +401,6 @@ public class UnifiService(
 
     #region Private Methods
 
-    // https://unifi.gerega.net/proxy/network/v2/api/site/default/static-dns
-    private async Task<List<UniHostRecord>> GetAllStaticDns()
-    {
-        try
-        {
-            return await BaseDnsSiteUrl.AppendPathSegments(SiteId, "static-dns")
-                .WithCookies(_cookieJar).GetJsonAsync<List<UniHostRecord>>();
-        }
-        catch (Exception e)
-        {
-            Logger.LogError(e, "Error retrieving DNS records from {Url}: {Message}", UnifiOptions.Url, e.Message);
-            return new List<UniHostRecord>();
-        }
-    }
-
-    // https://unifi.gerega.net/proxy/network/v2/api/site/default/static-dns/devices
-    private async Task<List<UniDeviceDnsRecord>> GetDeviceDnsRecords()
-    {
-        try
-        {
-            return await BaseDnsSiteUrl.AppendPathSegments(SiteId, "static-dns", "devices")
-                .WithCookies(_cookieJar).GetJsonAsync<List<UniDeviceDnsRecord>>();
-        }
-        catch (Exception e)
-        {
-            Logger.LogError(e, "Error retrieving DNS device records from {Url}: {Message}", UnifiOptions.Url, e.Message);
-            return new List<UniDeviceDnsRecord>();
-        }
-    }
-
     private async Task<IEnumerable<UniClient>> GetAllFixedIpClients()
     {
         var data = await BaseSiteApiUrl.AppendPathSegments(SiteId, "stat", "alluser")
@@ -536,47 +431,17 @@ public class UnifiService(
 
     private async Task<ServiceResult<UniClient>> ExecuteAddUniClientRequest(UnifiRequests.AddUniClientRequest addRequest)
     {
-        var result = new ServiceResult<UniClient>();
+        return await ExecuteRequest(BaseSiteApiUrl.AppendPathSegments(SiteId, "rest", "user"),
+                    async (request) =>
+                    {
+                        var addRequestString = JsonConvert.SerializeObject(addRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
+                        var addResult = await request
+                            .PostStringAsync(addRequestString)
+                            .ReceiveJson<UniResponse<List<UniClient>>>();
 
-        var addRequestString = JsonConvert.SerializeObject(addRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
-
-        var csrfToken = GetCsrfToken();
-
-        if (!string.IsNullOrEmpty(csrfToken))
-        {
-            Logger.LogDebug("CSRF = {Csrf}", csrfToken);
-            Logger.LogDebug("Payload String = {Payload}", addRequestString);
-            try
-            {
-                var addResult = await BaseSiteApiUrl
-                    .AppendPathSegments(SiteId, "rest", "user")
-                    .WithCookies(_cookieJar)
-                    .WithHeader("X-Csrf-Token", csrfToken)
-                    .PostStringAsync(addRequestString)
-                    .ReceiveJson<UniResponse<List<UniClient>>>();
-
-                if (addResult.Meta.Rc == UniMeta.ErrorResponse)
-                {
-                    Logger.LogError("Error adding client to {Url}: {Message}", UnifiOptions.Url, addResult.Meta.Msg);
-                    result.MarkFailed($"Error adding client to {UnifiOptions.Url}: {addResult.Meta.Msg}");
-                    return result;
-                }
-
-                result.MarkSuccessful(addResult.Data[0]);
-            }
-            catch (Exception e)
-            {
-                result.MarkFailed(e);
-                return result;
-            }
-        }
-        else
-        {
-            Logger.LogDebug("CSRF Token is null");
-            result.MarkFailed("No CSRF Token Present");
-        }
-
-        return result;
+                        return addResult.Data[0];
+                    }
+                    , true);
     }
     private async Task<ServiceResult<bool>> ClientExists(string mac)
     {
@@ -705,61 +570,6 @@ public class UnifiService(
         }
 
         return result;
-    }
-
-    private async Task<bool> VerifyLogin()
-    {
-        if (_cookieJar == null || _cookieJar.Count == 0)
-        {
-            var credentials = new {
-                username = UnifiOptions.Username,
-                password = UnifiOptions.Password,
-                remember = false,
-                strict = true
-            };
-
-            try
-            {
-                var url = UnifiOptions.IsUnifiOs
-                    ? UnifiOptions.Url.AppendPathSegments("api", "auth", "login")
-                    : UnifiOptions.Url.AppendPathSegments("api", "login");
-
-                _ = await url.WithCookies(out _cookieJar).PostJsonAsync(credentials).ReceiveJson<UniResponse<List<string>>>();
-            }
-            catch (FlurlHttpException ex)
-            {
-                var errorResponse = await ex.GetResponseJsonAsync<UniResponse<List<string>>>();
-                if (errorResponse.Meta.Rc == UniMeta.ErrorResponse)
-                {
-                    Logger.LogError("Error logging on to {Url}: {Message}", UnifiOptions.Url, errorResponse.Meta.Msg);
-                    return false;
-                }
-                Logger.LogDebug("Error Logging in: URL - {Url}, UserName - {UserName}, {Password}", UnifiOptions.Url, UnifiOptions.Username, UnifiOptions.Password);
-                Logger.LogError(ex, "Error logging in to Unifi Controller");
-                return false;
-            }
-        }
-        return true;
-    }
-    private string GetCsrfToken()
-    {
-        var csrfToken = _cookieJar.FirstOrDefault(cookie => cookie.Name == "X-Csrf-Token");
-
-        if (csrfToken != null)
-        {
-            return csrfToken.Value;
-        }
-
-        var token = _cookieJar.FirstOrDefault(cookie => cookie.Name == "TOKEN");
-
-        if (token != null)
-        {
-            var handler = new JwtSecurityTokenHandler();
-            var jsonToken = handler.ReadToken(token.Value) as JwtSecurityToken;
-            return jsonToken?.Claims.FirstOrDefault(claim => claim.Type == "csrfToken")?.Value;
-        }
-
-        return null;
     }
 
     private async Task<string> GetNetworkId(string networkName)

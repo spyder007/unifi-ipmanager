@@ -17,6 +17,4 @@ public interface IUnifiService
     Task<ServiceResult> UpdateClient(string mac, EditClientRequest editClientRequest);
 
     Task<ServiceResult> DeleteClient(string mac);
-
-    Task<ServiceResult<List<HostDnsRecord>>> GetHostDnsRecords();
 }

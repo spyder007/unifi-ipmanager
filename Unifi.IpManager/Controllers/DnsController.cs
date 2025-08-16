@@ -16,13 +16,13 @@ namespace Unifi.IpManager.Controllers;
 /// <remarks>
 /// Initializes a new instance of the <see cref="ClientController"/> class.
 /// </remarks>
-/// <param name="unifiService">The unifi service.</param>
+/// <param name="unifiDnsService">The unifi service.</param>
 /// <param name="logger">The logger.</param>
 [ApiVersion("1.0")]
 [Route("[controller]")]
 [ApiController]
 [Authorize]
-public class DnsController(IUnifiService unifiService, ILogger<DnsController> logger) : ControllerBase
+public class DnsController(IUnifiDnsService unifiDnsService, ILogger<DnsController> logger) : ControllerBase
 {
     private readonly ILogger<DnsController> _logger = logger;
 
@@ -30,7 +30,7 @@ public class DnsController(IUnifiService unifiService, ILogger<DnsController> lo
     /// Gets or sets the options.
     /// </summary>
     /// <value>The options.</value>
-    private IUnifiService IUnifyService { get; set; } = unifiService;
+    private IUnifiDnsService IUnifiDnsService { get; set; } = unifiDnsService;
 
     /// <summary>
     /// Gets this instance.
@@ -40,30 +40,30 @@ public class DnsController(IUnifiService unifiService, ILogger<DnsController> lo
     public async Task<ActionResult<ServiceResult<List<HostDnsRecord>>>> Get()
     {
         _logger.LogTrace("Processing request for all DNS records");
-        return await IUnifyService.GetHostDnsRecords();
+        return await IUnifiDnsService.GetHostDnsRecords();
     }
 
-    // [HttpPost]
-    // public async Task<ActionResult<ServiceResult<UniClient>>> Post([FromBody] NewClientRequest newRequest)
-    // {
-    //     _logger.LogTrace("Processing request for new client");
-    //     return await IUnifyService.CreateClient(newRequest);
-    // }
+    [HttpPost]
+    public async Task<ActionResult<ServiceResult<HostDnsRecord>>> Post([FromBody] HostDnsRecord hostRecord)
+    {
+        _logger.LogTrace("Processing request for new Dns Record");
+        return await IUnifiDnsService.CreateHostDnsRecord(hostRecord);
+    }
 
-    // [HttpPut]
-    // [Route("{mac}")]
-    // public async Task<ActionResult<ServiceResult>> Put([FromRoute] string mac, [FromBody] EditClientRequest editRequest)
-    // {
-    //     _logger.LogTrace("Processing request for edit client");
-    //     return await IUnifyService.UpdateClient(mac, editRequest);
-    // }
+    [HttpPut]
+    [Route("{id}")]
+    public async Task<ActionResult<ServiceResult<HostDnsRecord>>> Put([FromRoute] string id, [FromBody] HostDnsRecord hostRecord)
+    {
+        _logger.LogTrace("Processing request for update dns record");
+        hostRecord.Id = id;
+        return await IUnifiDnsService.UpdateDnsHostRecord(hostRecord);
+    }
 
-
-    // [HttpDelete]
-    // [Route("{mac}")]
-    // public async Task<ActionResult<ServiceResult>> DeleteClient([FromRoute] string mac)
-    // {
-    //     _logger.LogTrace("Processing request for delete client");
-    //     return await IUnifyService.DeleteClient(mac);
-    // }
+    [HttpDelete]
+    [Route("{id}")]
+    public async Task<ActionResult<ServiceResult>> DeleteClient([FromRoute] string id)
+    {
+        _logger.LogTrace("Processing request for delete dns record");
+        return await IUnifiDnsService.DeleteHostDnsRecord(id);
+    }
 }
