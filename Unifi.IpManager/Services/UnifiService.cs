@@ -1,5 +1,4 @@
-﻿using Flurl;
-using Flurl.Http;
+﻿using Flurl.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -14,61 +13,38 @@ using Unifi.IpManager.Models.Unifi;
 using NullValueHandling = Newtonsoft.Json.NullValueHandling;
 using UnifiRequests = Unifi.IpManager.Models.Unifi.Requests;
 using Unifi.IpManager.Options;
-using System.IdentityModel.Tokens.Jwt;
-using Unifi.IpManager.ExternalServices;
+using Spydersoft.Platform.Attributes;
 
 
 namespace Unifi.IpManager.Services;
 
+[DependencyInjection(typeof(IUnifiService), LifetimeOfService.Scoped)]
 public class UnifiService(
     IOptions<UnifiControllerOptions> options,
     IIpService ipService,
     ILogger<UnifiService> logger,
-    IDnsService dnsService) : UnifiBaseService(options, logger), IUnifiService
+    IUnifiClient unifiClient) : IUnifiService
 {
+    private ILogger<UnifiService> Logger { get; } = logger;
     private IIpService IpService { get; } = ipService;
-    private IDnsService DnsService { get; } = dnsService;
+
+    private UnifiControllerOptions UnifiOptions { get; } = options.Value;
 
     #region IUnifiService Implementation
 
     public async Task<ServiceResult<List<UnifiNetwork>>> GetAllNetworks()
     {
-        var result = new ServiceResult<List<UnifiNetwork>>();
-        if (!await VerifyLogin())
-        {
-            result.MarkFailed("Login failed.");
-            return result;
-        }
-        try
-        {
-            var data = await BaseSiteApiUrl.AppendPathSegments(SiteId, "rest", "networkconf")
-                .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UnifiNetwork>>>();
-            if (data.Meta.Rc == UniMeta.ErrorResponse)
+        return await unifiClient.ExecuteRequest<List<UnifiNetwork>>(
+            unifiClient.BaseApiUrlV1.AppendPathSegments(unifiClient.SiteId, "rest", "networkconf"),
+            async (request) =>
             {
-                Logger.LogError("Error retrieving networks from {Url}: {Message}", UnifiOptions.Url, data.Meta.Msg);
-                result.MarkFailed($"Error retrieving networks from {UnifiOptions.Url}: {data.Meta.Msg}");
-            }
-            else
-            {
-                result.MarkSuccessful(data.Data);
-            }
-        }
-        catch (Exception e)
-        {
-            result.MarkFailed(e);
-        }
-        return result;
+                return await request.GetJsonAsync<UniResponse<List<UnifiNetwork>>>();
+            });
     }
 
     public async Task<ServiceResult<List<UniClient>>> GetAllFixedClients()
     {
         var result = new ServiceResult<List<UniClient>>();
-
-        if (!await VerifyLogin())
-        {
-            result.MarkFailed("Login failed.");
-            return result;
-        }
 
         var allClients = new List<UniClient>();
 
@@ -112,12 +88,6 @@ public class UnifiService(
     public async Task<ServiceResult<UniClient>> CreateClient(NewClientRequest editClientRequest)
     {
         var result = new ServiceResult<UniClient>();
-
-        if (!await VerifyLogin())
-        {
-            result.MarkFailed("Login failed.");
-            return result;
-        }
 
         var clientExistsResult = await ClientExists(editClientRequest.MacAddress);
 
@@ -172,12 +142,6 @@ public class UnifiService(
     {
         var result = new ServiceResult();
 
-        if (!await VerifyLogin())
-        {
-            result.MarkFailed("Login failed.");
-            return result;
-        }
-
         var clientResult = await GetClient(mac);
 
         if (!clientResult.Success)
@@ -208,54 +172,20 @@ public class UnifiService(
 
         var postRequestString = JsonConvert.SerializeObject(editRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
 
-        var csrfToken = GetCsrfToken();
-
-        if (!string.IsNullOrEmpty(csrfToken))
-        {
-            Logger.LogDebug("CSRF = {Csrf}", csrfToken);
-            Logger.LogDebug("Payload String = {Payload}", postRequestString);
-            try
+        return await unifiClient.ExecuteRequest(
+            unifiClient.BaseApiUrlV1.AppendPathSegments(unifiClient.SiteId, "rest", "user", clientResult.Data.Id),
+            async (request) =>
             {
-                var noteResult = await BaseSiteApiUrl
-                    .AppendPathSegments(SiteId, "rest", "user", clientResult.Data.Id)
-                    .WithCookies(_cookieJar)
-                    .WithHeader("X-Csrf-Token", csrfToken)
-                    .PutStringAsync(postRequestString)
+                return await request.PutStringAsync(postRequestString)
                     .ReceiveJson<UniResponse<List<UniClient>>>();
 
-                if (noteResult.Meta.Rc == UniMeta.ErrorResponse)
-                {
-                    Logger.LogError("Error updating client to {Url}: {Message}", UnifiOptions.Url, noteResult.Meta.Msg);
-                    result.MarkFailed($"Error updating client to {UnifiOptions.Url}: {noteResult.Meta.Msg}");
-                }
-                else
-                {
-                    result.MarkSuccessful();
-                }
-            }
-            catch (Exception e)
-            {
-                result.MarkFailed(e);
-            }
-        }
-        else
-        {
-            Logger.LogDebug("CSRF Token is null");
-            result.MarkFailed("No CSRF Token Present");
-        }
 
-        return result;
+            }, true);
     }
 
     public async Task<ServiceResult<UniClient>> ProvisionNewClient(ProvisionRequest request)
     {
         var result = new ServiceResult<UniClient>();
-
-        if (!await VerifyLogin())
-        {
-            result.MarkFailed("Login failed.");
-            return result;
-        }
 
         var clientsResult = await GetAllFixedClients();
         if (!clientsResult.Success)
@@ -312,41 +242,15 @@ public class UnifiService(
             }
         }
 
-        var addResult = await ExecuteAddUniClientRequest(addRequest);
-
-        if (addResult.Success && request.SyncDns && !await DnsService.AddDnsARecord(addResult.Data.Hostname, addResult.Data.FixedIp, null))
-        {
-            Logger.LogError("Unable to create DNS Record for {HostName}:{Ip}", addResult.Data.Hostname, addResult.Data.FixedIp);
-        }
-
-        return addResult;
+        return await ExecuteAddUniClientRequest(addRequest);
     }
 
     public async Task<ServiceResult> DeleteClient(string mac)
     {
-        var result = new ServiceResult();
-
-        if (!await VerifyLogin())
-        {
-            result.MarkFailed("Login failed.");
-            return result;
-        }
-
         var clientResult = await GetClient(mac);
-        if (clientResult.Success)
+        if (clientResult.Success && clientResult.Data.Noted && clientResult.Data.UseFixedIp)
         {
-            if (clientResult.Data.Noted
-                && (clientResult.Data.Notes.SyncDnsHostName ?? false)
-                && !await DnsService.DeleteDnsARecord(clientResult.Data.Hostname, clientResult.Data.FixedIp, null))
-            {
-                Logger.LogError("Unable to remove DNS Record for {HostName}:{Ip}", clientResult.Data.Hostname,
-                    clientResult.Data.FixedIp);
-            }
-
-            if (clientResult.Data.Noted && clientResult.Data.UseFixedIp)
-            {
-                await IpService.ReturnIpAddress(clientResult.Data.FixedIp);
-            }
+            await IpService.ReturnIpAddress(clientResult.Data.FixedIp);
         }
 
         var postRequest = new UnifiRequests.StaRequest()
@@ -357,43 +261,17 @@ public class UnifiService(
 
         var postRequestString = JsonConvert.SerializeObject(postRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
 
-        var csrfToken = GetCsrfToken();
-
-        if (!string.IsNullOrEmpty(csrfToken))
-        {
-            Logger.LogDebug("CSRF = {Csrf}", csrfToken);
-            Logger.LogDebug("Payload String = {Payload}", postRequestString);
-            try
+        return await unifiClient.ExecuteRequest(
+            unifiClient.BaseApiUrlV1.AppendPathSegments(unifiClient.SiteId, "cmd", "stamgr"),
+            async (request) =>
             {
-                var noteResult = await BaseSiteApiUrl
-                    .AppendPathSegments(SiteId, "cmd", "stamgr")
-                    .WithCookies(_cookieJar)
-                    .WithHeader("X-Csrf-Token", csrfToken)
+                // POST https://unifi.gerega.net/proxy/network/v1/api/site/default/cmd/stamgr
+                // Body: {"cmd":"forget-sta","macs":["68:a0:98:ac:e2:50"]}
+                return await request
                     .PostStringAsync(postRequestString)
                     .ReceiveJson<UniResponse<List<UniClient>>>();
 
-                if (noteResult.Meta.Rc == UniMeta.ErrorResponse)
-                {
-                    Logger.LogError("Error deleting editClientRequest : {Message}", noteResult.Meta.Msg);
-                    result.MarkFailed($"Error deleting editClientRequest : {noteResult.Meta.Msg}");
-                }
-                else
-                {
-                    result.MarkSuccessful();
-                }
-            }
-            catch (Exception e)
-            {
-                result.MarkFailed(e);
-            }
-        }
-        else
-        {
-            Logger.LogDebug("CSRF Token is null");
-            result.MarkFailed("No CSRF Token Present");
-        }
-
-        return result;
+            }, true);
     }
 
     #endregion IUnifiService Implementation
@@ -401,15 +279,18 @@ public class UnifiService(
 
     #region Private Methods
 
-    private async Task<IEnumerable<UniClient>> GetAllFixedIpClients()
+    private async Task<List<UniClient>> GetAllFixedIpClients()
     {
-        var data = await BaseSiteApiUrl.AppendPathSegments(SiteId, "stat", "alluser")
-            .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
+        var data = await unifiClient.ExecuteRequest<List<UniClient>>(
+            unifiClient.BaseApiUrlV1.AppendPathSegments(unifiClient.SiteId, "rest", "user"),
+            async (request) =>
+            {
+                return await request.GetJsonAsync<UniResponse<List<UniClient>>>();
+            });
 
-        if (data.Meta.Rc == UniMeta.ErrorResponse)
+        if (!data.Success)
         {
-            Logger.LogError("Error retrieving clients from {Url}: {Message}", UnifiOptions.Url, data.Meta.Msg);
-            return [];
+            return new List<UniClient>();
         }
         else
         {
@@ -425,13 +306,14 @@ public class UnifiService(
                     client.IpGroup = IpService.GetIpGroupForAddress(client.FixedIp);
                 }
             });
-            return data.Data.Where(uc => uc.UseFixedIp);
+            return data.Data.Where(uc => uc.UseFixedIp).ToList();
         }
     }
 
     private async Task<ServiceResult<UniClient>> ExecuteAddUniClientRequest(UnifiRequests.AddUniClientRequest addRequest)
     {
-        return await ExecuteRequest(BaseSiteApiUrl.AppendPathSegments(SiteId, "rest", "user"),
+        return await unifiClient.ExecuteRequest(
+                    unifiClient.BaseApiUrlV1.AppendPathSegments(unifiClient.SiteId, "rest", "user"),
                     async (request) =>
                     {
                         var addRequestString = JsonConvert.SerializeObject(addRequest, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
@@ -445,80 +327,42 @@ public class UnifiService(
     }
     private async Task<ServiceResult<bool>> ClientExists(string mac)
     {
-        var result = new ServiceResult<bool>();
-
-        if (!await VerifyLogin())
-        {
-            result.MarkFailed("Login failed.");
-            return result;
-        }
-
-        try
-        {
-            var data = await BaseSiteApiUrl.AppendPathSegments(SiteId, "rest", "user").SetQueryParam("mac", mac)
-                .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
-
-            if (data.Meta.Rc == UniMeta.ErrorResponse)
+        return await unifiClient.ExecuteRequest<bool>(
+            unifiClient.BaseApiUrlV1.AppendPathSegments(unifiClient.SiteId, "rest", "user").SetQueryParam("mac", mac),
+            async (request) =>
             {
-                Logger.LogError("Error retrieving client from {Url}: {Message}", UnifiOptions.Url, data.Meta.Msg);
-            }
-            else
-            {
-                result.MarkSuccessful(data.Data.Count != 0);
-            }
-        }
-        catch (Exception e)
-        {
-            result.MarkFailed(e);
-        }
-
-        return result;
+                var data = await request.GetJsonAsync<UniResponse<List<UniClient>>>();
+                return data.Data.Count != 0;
+            });
     }
     private async Task<ServiceResult<UniClient>> GetClient(string mac)
     {
+        var data = await unifiClient.ExecuteRequest<List<UniClient>>(
+            unifiClient.BaseApiUrlV1.AppendPathSegments(unifiClient.SiteId, "rest", "user").SetQueryParam("mac", mac),
+            async (request) =>
+            {
+                return await request.GetJsonAsync<UniResponse<List<UniClient>>>();
+            });
         var result = new ServiceResult<UniClient>();
 
-        if (!await VerifyLogin())
+        if (data.Data.Count == 0)
         {
-            result.MarkFailed("Login failed.");
-            return result;
+            result.MarkFailed("Client not found.");
         }
-
-        try
+        else
         {
-            var data = await BaseSiteApiUrl.AppendPathSegments(SiteId, "rest", "user").SetQueryParam("mac", mac)
-                .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniClient>>>();
-
-            if (data.Meta.Rc == UniMeta.ErrorResponse)
+            data.Data.ForEach(client =>
             {
-                Logger.LogError("Error retrieving client from {Url}: {Message}", UnifiOptions.Url, data.Meta.Msg);
-            }
-            else
-            {
-                if (data.Data.Count == 0)
+                if (string.IsNullOrWhiteSpace(client.Name))
                 {
-                    result.MarkFailed("Client not found.");
+                    client.Name = client.Hostname;
                 }
-                else
+                if (client.UseFixedIp)
                 {
-                    data.Data.ForEach(client =>
-                    {
-                        if (string.IsNullOrWhiteSpace(client.Name))
-                        {
-                            client.Name = client.Hostname;
-                        }
-                        if (client.UseFixedIp)
-                        {
-                            client.IpGroup = IpService.GetIpGroupForAddress(client.FixedIp);
-                        }
-                    });
-                    result.MarkSuccessful(data.Data[0]);
+                    client.IpGroup = IpService.GetIpGroupForAddress(client.FixedIp);
                 }
-            }
-        }
-        catch (Exception e)
-        {
-            result.MarkFailed(e);
+            });
+            result.MarkSuccessful(data.Data[0]);
         }
 
         return result;
@@ -528,41 +372,32 @@ public class UnifiService(
     {
         var result = new ServiceResult<List<UniClient>>();
 
-        if (!await VerifyLogin())
-        {
-            result.MarkFailed("Login failed.");
-            return result;
-        }
-
         try
         {
-            var devicesClients = new List<UniClient>();
-            var data = await BaseSiteApiUrl.AppendPathSegments(SiteId, "stat", "device")
-                .WithCookies(_cookieJar).GetJsonAsync<UniResponse<List<UniDevice>>>();
 
-            if (data.Meta.Rc == UniMeta.ErrorResponse)
-            {
-                string message = data.Meta.Msg;
-                Logger.LogError("Error retrieving clients from {Url}: {Message}", UnifiOptions.Url, message);
-                result.MarkFailed($"Error retrieving clients from {UnifiOptions.Url}: {data.Meta.Msg}");
-            }
-            else
-            {
-                foreach (var client in data.Data)
+            var devicesClients = new List<UniClient>();
+            var data = await unifiClient.ExecuteRequest(
+                unifiClient.BaseApiUrlV1.AppendPathSegments(unifiClient.SiteId, "stat", "device"),
+                async (request) =>
                 {
-                    devicesClients.Add(new UniClient
-                    {
-                        Id = client.Id,
-                        FixedIp = client.Network.Ip,
-                        Name = client.Name,
-                        Mac = client.Mac,
-                        UseFixedIp = true,
-                        ObjectType = "device",
-                        IpGroup = IpService.GetIpGroupForAddress(client.Network.Ip)
-                    });
-                }
-                result.MarkSuccessful(devicesClients);
+                    return await request.GetJsonAsync<UniResponse<List<UniDevice>>>();
+                });
+
+            foreach (var client in data.Data)
+            {
+                devicesClients.Add(new UniClient
+                {
+                    Id = client.Id,
+                    FixedIp = client.Network.Ip,
+                    Name = client.Name,
+                    Mac = client.Mac,
+                    UseFixedIp = true,
+                    ObjectType = "device",
+                    IpGroup = IpService.GetIpGroupForAddress(client.Network.Ip)
+                });
             }
+            result.MarkSuccessful(devicesClients);
+
         }
         catch (Exception e)
         {

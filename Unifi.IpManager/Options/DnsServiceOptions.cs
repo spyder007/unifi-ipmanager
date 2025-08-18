@@ -1,5 +1,8 @@
-﻿namespace Unifi.IpManager.Options;
+﻿using Spydersoft.Platform.Attributes;
 
+namespace Unifi.IpManager.Options;
+
+[InjectOptions(SectionName)]
 public class DnsServiceOptions
 {
     public const string SectionName = "DnsService";

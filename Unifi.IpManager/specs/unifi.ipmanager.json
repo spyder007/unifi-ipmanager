@@ -700,52 +700,46 @@
             "type": "array",
             "nullable": true,
             "items": {
-              "$ref": "#/components/schemas/DnsRecord"
+              "$ref": "#/components/schemas/HostDnsRecord"
             }
           },
           "traffic": {
             "type": "array",
             "nullable": true,
             "items": {
-              "$ref": "#/components/schemas/DnsRecord"
+              "$ref": "#/components/schemas/HostDnsRecord"
             }
           }
         }
       },
-      "DnsRecord": {
+      "HostDnsRecord": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "zoneName": {
+          "id": {
             "type": "string",
             "nullable": true
           },
-          "hostName": {
+          "hostname": {
+            "type": "string",
+            "nullable": true
+          },
+          "ipAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "macAddress": {
             "type": "string",
             "nullable": true
           },
           "recordType": {
-            "$ref": "#/components/schemas/DnsRecordType"
-          },
-          "data": {
             "type": "string",
             "nullable": true
+          },
+          "deviceLock": {
+            "type": "boolean"
           }
         }
-      },
-      "DnsRecordType": {
-        "type": "string",
-        "description": "",
-        "x-enumNames": [
-          "A",
-          "AAAA",
-          "CNAME"
-        ],
-        "enum": [
-          "A",
-          "AAAA",
-          "CNAME"
-        ]
       },
       "NewClusterRequest": {
         "type": "object",
@@ -794,35 +788,6 @@
             }
           }
         ]
-      },
-      "HostDnsRecord": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string",
-            "nullable": true
-          },
-          "hostname": {
-            "type": "string",
-            "nullable": true
-          },
-          "ipAddress": {
-            "type": "string",
-            "nullable": true
-          },
-          "macAddress": {
-            "type": "string",
-            "nullable": true
-          },
-          "recordType": {
-            "type": "string",
-            "nullable": true
-          },
-          "deviceLock": {
-            "type": "boolean"
-          }
-        }
       },
       "ServiceResultOfHostDnsRecord": {
         "allOf": [

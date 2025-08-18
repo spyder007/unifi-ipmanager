@@ -2,49 +2,43 @@ using Flurl;
 using Flurl.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Serialization;
 using Unifi.IpManager.Models.DTO;
 using Unifi.IpManager.Models.Unifi;
-using NullValueHandling = Newtonsoft.Json.NullValueHandling;
-using UnifiRequests = Unifi.IpManager.Models.Unifi.Requests;
 using Unifi.IpManager.Options;
 using System.IdentityModel.Tokens.Jwt;
-using Unifi.IpManager.ExternalServices;
+using Spydersoft.Platform.Attributes;
 
 
 namespace Unifi.IpManager.Services;
 
-public class UnifiBaseService(
+[DependencyInjection(typeof(IUnifiClient), LifetimeOfService.Singleton)]
+public class UnifiClient(
     IOptions<UnifiControllerOptions> options,
-    ILogger logger)
+    ILogger<UnifiClient> logger) : IUnifiClient
 {
     protected UnifiControllerOptions UnifiOptions { get; } = options.Value;
-    protected ILogger Logger { get; } = logger;
+    protected ILogger<UnifiClient> Logger { get; } = logger;
 
-    // TODO: Make this private by moving UnifiService calls to "executerequest"
-    protected CookieJar _cookieJar;
+    private CookieJar _cookieJar;
 
-    protected Url BaseDnsSiteUrl => UnifiOptions.IsUnifiOs
-        ? UnifiOptions.Url.AppendPathSegments("proxy", "network", "v2", "api", "site")
-        : UnifiOptions.Url.AppendPathSegments("api", "dns");
+    #region IUnifiClient Implementation
 
-    protected Url BaseSiteApiUrl => UnifiOptions.IsUnifiOs
+    public string SiteId => UnifiOptions.Site;
+
+    public Url BaseApiUrlV1 => UnifiOptions.IsUnifiOs
         ? UnifiOptions.Url.AppendPathSegments("proxy", "network", "api", "s")
         : UnifiOptions.Url.AppendPathSegments("api", "s");
 
-    protected string SiteId => UnifiOptions.Site;
+    public Url BaseApiUrlV2 => UnifiOptions.IsUnifiOs
+        ? UnifiOptions.Url.AppendPathSegments("proxy", "network", "v2", "api", "site")
+        : UnifiOptions.Url.AppendPathSegments("api", "dns");
 
-     
 
-
-    #region Protected Methods
-    protected async Task<ServiceResult<T>> ExecuteRequest<T>(Url url, Func<IFlurlRequest, Task<T>> apiCall, bool includeCsrf = false)
+    public async Task<ServiceResult<T>> ExecuteRequest<T>(Url url, Func<IFlurlRequest, Task<UniResponse<T>>> apiCall, bool includeCsrf = false)
     {
         var result = new ServiceResult<T>();
 
@@ -67,6 +61,70 @@ public class UnifiBaseService(
                 }
 
                 var data = await apiCall(baseRequest);
+
+                if (data.Meta.Rc == UniMeta.ErrorResponse)
+                {
+                    result.MarkFailed(data.Meta.Msg);
+                }
+                else
+                {
+                    result.MarkSuccessful(data.Data);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e, "Error executing request: {Message}", e.Message);
+                result.MarkFailed(e);
+            }
+        }
+        else
+        {
+            Logger.LogDebug("CSRF Token is null");
+            result.MarkFailed("No CSRF Token Present");
+        }
+        return result;
+    }
+
+    public async Task<ServiceResult<T>> ExecuteRequest<T>(Url url, Func<IFlurlRequest, Task<T>> apiCall, bool includeCsrf = false)
+    {
+        var result = new ServiceResult<T>();
+
+        if (!await VerifyLogin())
+        {
+            result.MarkFailed("Login failed.");
+            return result;
+        }
+
+        var csrfToken = GetCsrfToken();
+
+        if (!includeCsrf || !string.IsNullOrWhiteSpace(csrfToken))
+        {
+            try
+            {
+                var baseRequest = url.WithCookies(_cookieJar);
+                if (includeCsrf)
+                {
+                    baseRequest = baseRequest.WithHeader("X-Csrf-Token", csrfToken);
+                }
+
+                var data = await apiCall(baseRequest);
+
+                if (data is UniResponse<T> response)
+                {
+                    if (response.Meta.Rc == UniMeta.ErrorResponse)
+                    {
+                        result.MarkFailed(response.Meta.Msg);
+                    }
+                    else
+                    {
+                        result.MarkSuccessful(response.Data);
+                    }
+                }
+                else
+                {
+                    result.MarkSuccessful(data);
+                }
+
                 result.MarkSuccessful(data);
             }
             catch (Exception e)
@@ -83,8 +141,9 @@ public class UnifiBaseService(
         return result;
     }
 
-    // TODO: Make this private
-    protected async Task<bool> VerifyLogin()
+    #endregion IUnifiClient Implementation
+
+    private async Task<bool> VerifyLogin()
     {
         if (_cookieJar == null || _cookieJar.Count == 0)
         {
@@ -118,9 +177,8 @@ public class UnifiBaseService(
         }
         return true;
     }
-    
-    // TODO: Make this private
-    protected string GetCsrfToken()
+
+    private string GetCsrfToken()
     {
         var csrfToken = _cookieJar.FirstOrDefault(cookie => cookie.Name == "X-Csrf-Token");
 
@@ -141,6 +199,6 @@ public class UnifiBaseService(
         return null;
     }
 
-    #endregion Private Methods
+
 
 }

@@ -6,10 +6,12 @@ using System.Text;
 using Microsoft.Extensions.Caching.Distributed;
 using Unifi.IpManager.Options;
 using System.Threading.Tasks;
+using Spydersoft.Platform.Attributes;
 
 namespace Unifi.IpManager.Services;
 
-public class IpService(IOptions<IpOptions> options, ILogger<UnifiService> logger, IDistributedCache distributedCache) : IIpService
+[DependencyInjection(typeof(IIpService), LifetimeOfService.Scoped)]
+public class IpService(IOptions<IpOptions> options, ILogger<IpService> logger, IDistributedCache distributedCache) : IIpService
 {
     private IpOptions IpOptions { get; } = options.Value;
     private ILogger Logger { get; } = logger;

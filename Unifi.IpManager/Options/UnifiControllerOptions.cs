@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel;
+using Spydersoft.Platform.Attributes;
 
 namespace Unifi.IpManager.Options;
 
 /// <summary>
 /// Class MyOptions.
 /// </summary>
+[InjectOptions(SectionName)]
 public class UnifiControllerOptions
 {
     public const string SectionName = "UnifiControllerOptions";
