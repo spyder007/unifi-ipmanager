@@ -22,10 +22,8 @@ namespace Unifi.IpManager.Services;
 public class UnifiService(
     IOptions<UnifiControllerOptions> options,
     IIpService ipService,
-    ILogger<UnifiService> logger,
     IUnifiClient unifiClient) : IUnifiService
 {
-    private ILogger<UnifiService> Logger { get; } = logger;
     private IIpService IpService { get; } = ipService;
 
     private UnifiControllerOptions UnifiOptions { get; } = options.Value;
