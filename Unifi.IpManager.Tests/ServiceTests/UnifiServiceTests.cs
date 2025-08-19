@@ -252,7 +252,8 @@ public class UnifiServiceTests
         var editRequest = new EditClientRequest
         {
             Name = "UpdatedClient",
-            Hostname = "updatedclient"
+            Hostname = "updatedclient",
+            UseLocalDns = true
         };
 
         var existingClient = new UniClient
