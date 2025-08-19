@@ -1,6 +1,7 @@
+using Unifi.IpManager.Models.DTO;
 using Unifi.IpManager.Models.Unifi;
 
-namespace Unifi.IpManager.Models.DTO;
+namespace Unifi.IpManager.Extensions;
 
 public static class HostDnsRecordExtensions
 {

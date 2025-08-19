@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Unifi.IpManager.Extensions;
 using Unifi.IpManager.Models.DTO;
 using Unifi.IpManager.Models.Unifi;
 

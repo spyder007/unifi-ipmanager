@@ -7,6 +7,7 @@ using Flurl.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using Unifi.IpManager.Extensions;
 using Unifi.IpManager.Models.DTO;
 using Unifi.IpManager.Models.Unifi;
 using Unifi.IpManager.Services;

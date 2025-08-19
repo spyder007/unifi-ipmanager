@@ -60,7 +60,10 @@ public class IpService(IOptions<IpOptions> options, ILogger<IpService> logger, I
             return string.Empty;
         }
 
-        var match = System.Text.RegularExpressions.Regex.Match(ipAddress, "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$");
+        var match = System.Text.RegularExpressions.Regex.Match(ipAddress,
+            "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$", 
+            System.Text.RegularExpressions.RegexOptions.None,
+            TimeSpan.FromMilliseconds(100));
         if (!match.Success)
         {
             return string.Empty;

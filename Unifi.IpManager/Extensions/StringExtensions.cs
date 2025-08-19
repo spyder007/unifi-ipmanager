@@ -7,7 +7,7 @@ public static class StringExtensions
 {
     public static string GetDomainFromHostname(this string hostname)
     {
-        if (string.IsNullOrEmpty(hostname))
+        if (string.IsNullOrWhiteSpace(hostname))
         {
             throw new ArgumentException("Invalid hostname", nameof(hostname));
         }
