@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Unifi.IpManager.Models.Dns;
 using Unifi.IpManager.Models.DTO;
 using Unifi.IpManager.Services;
-using Unifi.IpManager.ExternalServices;
 using Asp.Versioning;
 
 namespace Unifi.IpManager.Controllers;

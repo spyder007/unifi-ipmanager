@@ -6,7 +6,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Spydersoft.Platform.Attributes;
 using Unifi.IpManager.Extensions;
-using Unifi.IpManager.ExternalServices;
 using Unifi.IpManager.Models.Dns;
 using Unifi.IpManager.Models.DTO;
 
