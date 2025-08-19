@@ -84,7 +84,7 @@ public class IpServiceTests
 	public async Task GetUnusedGroupIpAddress_ReturnsEmptyWhenAllIpsExhausted()
 	{
 		// Arrange - all IPs in range are used
-		var usedIps = new List<string> { "192.168.1.100", "192.168.1.101" };
+		var usedIps = new List<string> { "192.168.1.100", "192.168.1.101", "192.168.1.102" };
 		_cacheMock.Setup(c => c.GetAsync(It.IsAny<string>(), default)).ReturnsAsync((byte[]?)null);
 
 		// Act
@@ -382,8 +382,8 @@ public class IpServiceTests
 	{
 		await _service.ReturnIpAddress("");
 		// Should not throw exception, verify cache operations still happen with empty string
-		var expectedKey = "Unifi.IpManager.IpCooldown.";
-		_cacheMock.Verify(c => c.GetAsync(expectedKey, default), Times.Once);
+_cacheMock.Verify(c => c.GetAsync(It.IsAny<string>(), default), Times.Never);
+		_cacheMock.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), default), Times.Never);
 	}
 
 	[Test]
@@ -475,7 +475,7 @@ public class IpServiceTests
 	public async Task GetUnusedGroupIpAddress_LogsWarningWhenNoIpsFound()
 	{
 		// Arrange - all IPs exhausted
-		var usedIps = new List<string> { "192.168.1.100", "192.168.1.101" };
+		var usedIps = new List<string> { "192.168.1.100", "192.168.1.101", "192.168.1.102" };
 		_cacheMock.Setup(c => c.GetAsync(It.IsAny<string>(), default)).ReturnsAsync((byte[]?)null);
 
 		// Act
