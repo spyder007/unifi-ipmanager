@@ -55,12 +55,13 @@ _ = !string.IsNullOrEmpty(cacheConnection)
     ? builder.Services.AddStackExchangeRedisCache(options => options.Configuration = cacheConnection)
     : builder.Services.AddDistributedMemoryCache();
 
-_ = builder.Services.Configure<DnsServiceOptions>(builder.Configuration.GetSection(DnsServiceOptions.SectionName));
-_ = builder.Services.Configure<UnifiControllerOptions>(builder.Configuration.GetSection(UnifiControllerOptions.SectionName));
-_ = builder.Services.Configure<IpOptions>(builder.Configuration.GetSection(IpOptions.SectionName));
-_ = builder.Services.AddScoped<IDnsService, DnsService>();
-_ = builder.Services.AddScoped<IUnifiService, UnifiService>();
-_ = builder.Services.AddScoped<IIpService, IpService>();
+// add all options with no tags
+
+if (builder.Environment.EnvironmentName != "NSwag")
+{
+    builder.AddSpydersoftOptions([]);
+    _ = builder.Services.AddSpydersoftDecoratedServices();
+}
 _ = builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
 _ = builder.Services.AddOpenApiDocument(doc =>

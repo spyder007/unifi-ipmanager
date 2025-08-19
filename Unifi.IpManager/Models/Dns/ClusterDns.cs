@@ -1,14 +1,13 @@
 ﻿using System.Collections.Generic;
-using Unifi.IpManager.ExternalServices;
+using Unifi.IpManager.Models.DTO;
 
-namespace Unifi.IpManager.Models.Dns
+namespace Unifi.IpManager.Models.Dns;
+
+public class ClusterDns
 {
-    public class ClusterDns
-    {
-        public string Name { get; set; }
-        public string ZoneName { get; set; }
-        public List<DnsRecord> ControlPlane { get; set; }
+    public string Name { get; set; }
+    public string ZoneName { get; set; }
+    public List<HostDnsRecord> ControlPlane { get; set; }
 
-        public List<DnsRecord> Traffic { get; set; }
-    }
+    public List<HostDnsRecord> Traffic { get; set; }
 }

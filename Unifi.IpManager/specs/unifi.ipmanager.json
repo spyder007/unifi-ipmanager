@@ -276,6 +276,129 @@
         }
       }
     },
+    "/dns": {
+      "get": {
+        "tags": [
+          "Dns"
+        ],
+        "summary": "Gets this instance.",
+        "operationId": "Dns_Get",
+        "responses": {
+          "200": {
+            "description": "ActionResult<System.String>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceResultOfListOfHostDnsRecord"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Dns"
+        ],
+        "operationId": "Dns_Post",
+        "requestBody": {
+          "x-name": "hostRecord",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HostDnsRecord"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceResultOfHostDnsRecord"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dns/{id}": {
+      "put": {
+        "tags": [
+          "Dns"
+        ],
+        "operationId": "Dns_Put",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "hostRecord",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HostDnsRecord"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceResultOfHostDnsRecord"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Dns"
+        ],
+        "operationId": "Dns_DeleteClient",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/info": {
       "get": {
         "tags": [
@@ -343,6 +466,16 @@
           "use_fixedip": {
             "type": "boolean",
             "description": "Gets or sets a value indicating whether [use fixedip]."
+          },
+          "is_wired": {
+            "type": "boolean"
+          },
+          "local_dns_record_enabled": {
+            "type": "boolean"
+          },
+          "local_dns_record": {
+            "type": "string",
+            "nullable": true
           },
           "fixed_ip": {
             "type": "string",
@@ -496,6 +629,9 @@
                 "$ref": "#/components/schemas/UniNote"
               }
             ]
+          },
+          "useLocalDns": {
+            "type": "boolean"
           }
         }
       },
@@ -564,52 +700,46 @@
             "type": "array",
             "nullable": true,
             "items": {
-              "$ref": "#/components/schemas/DnsRecord"
+              "$ref": "#/components/schemas/HostDnsRecord"
             }
           },
           "traffic": {
             "type": "array",
             "nullable": true,
             "items": {
-              "$ref": "#/components/schemas/DnsRecord"
+              "$ref": "#/components/schemas/HostDnsRecord"
             }
           }
         }
       },
-      "DnsRecord": {
+      "HostDnsRecord": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "zoneName": {
+          "id": {
             "type": "string",
             "nullable": true
           },
-          "hostName": {
+          "hostname": {
+            "type": "string",
+            "nullable": true
+          },
+          "ipAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "macAddress": {
             "type": "string",
             "nullable": true
           },
           "recordType": {
-            "$ref": "#/components/schemas/DnsRecordType"
-          },
-          "data": {
             "type": "string",
             "nullable": true
+          },
+          "deviceLock": {
+            "type": "boolean"
           }
         }
-      },
-      "DnsRecordType": {
-        "type": "string",
-        "description": "",
-        "x-enumNames": [
-          "A",
-          "AAAA",
-          "CNAME"
-        ],
-        "enum": [
-          "A",
-          "AAAA",
-          "CNAME"
-        ]
       },
       "NewClusterRequest": {
         "type": "object",
@@ -638,6 +768,47 @@
             }
           }
         }
+      },
+      "ServiceResultOfListOfHostDnsRecord": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ServiceResult"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "data": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "$ref": "#/components/schemas/HostDnsRecord"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ServiceResultOfHostDnsRecord": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ServiceResult"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "data": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/HostDnsRecord"
+                  }
+                ]
+              }
+            }
+          }
+        ]
       },
       "Info": {
         "type": "object",
@@ -684,6 +855,10 @@
             "description": "Gets or sets a value indicating whether this instance is on Unifi OS."
           },
           "site": {
+            "type": "string",
+            "nullable": true
+          },
+          "dnsZone": {
             "type": "string",
             "nullable": true
           }

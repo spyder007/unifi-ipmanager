@@ -53,6 +53,8 @@ extends:
     sonarEndpointName: sonarcloud-spydersoft
     sonarProjectKey: spyder007_unifi-ipmanager
     sonarProjectName: unifi-ipmanager
+    sonarExtraProperties: |
+      sonar.coverage.exclusions=**/Program.cs
     executeTests: true
     testProjects: '**/*.Tests/*.csproj'
     useSonarCloud: true

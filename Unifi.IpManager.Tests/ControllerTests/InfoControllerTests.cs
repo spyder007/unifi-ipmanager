@@ -4,7 +4,7 @@ using Moq;
 using Unifi.IpManager.Controllers;
 using Unifi.IpManager.Options;
 
-namespace Unifi.IpManager.Tests
+namespace Unifi.IpManager.Tests.ControllerTests
 {
     public class InfoControllerTests
     {
