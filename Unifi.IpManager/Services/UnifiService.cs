@@ -14,6 +14,7 @@ using NullValueHandling = Newtonsoft.Json.NullValueHandling;
 using UnifiRequests = Unifi.IpManager.Models.Unifi.Requests;
 using Unifi.IpManager.Options;
 using Spydersoft.Platform.Attributes;
+using StackExchange.Redis;
 
 
 namespace Unifi.IpManager.Services;
@@ -98,6 +99,7 @@ public class UnifiService(
         if (clientExistsResult.Data)
         {
             result.MarkFailed($"Client with Mac Address {editClientRequest.MacAddress} already exists.");
+            return result;
         }
 
         var note = new UniNote()
@@ -369,10 +371,8 @@ public class UnifiService(
     private async Task<ServiceResult<List<UniClient>>> GetDevicesAsUniClient()
     {
         var result = new ServiceResult<List<UniClient>>();
-
         try
         {
-
             var devicesClients = new List<UniClient>();
             var data = await unifiClient.ExecuteRequest(
                 unifiClient.BaseApiUrlV1.AppendPathSegments(unifiClient.SiteId, "stat", "device"),
@@ -381,21 +381,27 @@ public class UnifiService(
                     return await request.GetJsonAsync<UniResponse<List<UniDevice>>>();
                 });
 
-            foreach (var client in data.Data)
+            if (data.Success)
             {
-                devicesClients.Add(new UniClient
+                foreach (var client in data.Data)
                 {
-                    Id = client.Id,
-                    FixedIp = client.Network.Ip,
-                    Name = client.Name,
-                    Mac = client.Mac,
-                    UseFixedIp = true,
-                    ObjectType = "device",
-                    IpGroup = IpService.GetIpGroupForAddress(client.Network.Ip)
-                });
+                    devicesClients.Add(new UniClient
+                    {
+                        Id = client.Id,
+                        FixedIp = client.Network.Ip,
+                        Name = client.Name,
+                        Mac = client.Mac,
+                        UseFixedIp = true,
+                        ObjectType = "device",
+                        IpGroup = IpService.GetIpGroupForAddress(client.Network.Ip)
+                    });
+                }
+                result.MarkSuccessful(devicesClients);
             }
-            result.MarkSuccessful(devicesClients);
-
+            else
+            {
+                result.MarkFailed(data.Errors);
+            }
         }
         catch (Exception e)
         {

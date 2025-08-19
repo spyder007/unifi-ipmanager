@@ -1,3 +1,4 @@
+using Flurl;
 using Flurl.Http;
 using Microsoft.Extensions.Logging;
 using Spydersoft.Platform.Attributes;
@@ -17,6 +18,8 @@ public class UnifiDnsService(
     IUnifiClient unifiClient)
     : IUnifiDnsService
 {
+
+    private Url StaticDnsUrl => unifiClient.BaseApiUrlV2.AppendPathSegments(unifiClient.SiteId, "static-dns");
 
     #region IUnifiService Implementation
 
@@ -40,7 +43,7 @@ public class UnifiDnsService(
 
     public async Task<ServiceResult<HostDnsRecord>> CreateHostDnsRecord(HostDnsRecord hostRecord)
     {
-        var result = await unifiClient.ExecuteRequest(unifiClient.BaseApiUrlV2.AppendPathSegments(unifiClient.SiteId, "static-dns"),
+        var result = await unifiClient.ExecuteRequest(StaticDnsUrl,
         async (request) =>
             {
                 var response = await request
@@ -59,7 +62,7 @@ public class UnifiDnsService(
 
     public async Task<ServiceResult<HostDnsRecord>> UpdateDnsHostRecord(HostDnsRecord hostRecord)
     {
-        var result = await unifiClient.ExecuteRequest(unifiClient.BaseApiUrlV2.AppendPathSegments(unifiClient.SiteId, "static-dns", hostRecord.Id),
+        var result = await unifiClient.ExecuteRequest(StaticDnsUrl.AppendPathSegments(hostRecord.Id),
         async (request) =>
             {
 
@@ -75,7 +78,7 @@ public class UnifiDnsService(
     public async Task<ServiceResult> DeleteHostDnsRecord(string id)
     {
         // DELETE https://unifi.gerega.net/proxy/network/v2/api/site/default/static-dns/68a098ace250787265875126
-        var result = await unifiClient.ExecuteRequest(unifiClient.BaseApiUrlV2.AppendPathSegments(unifiClient.SiteId, "static-dns", id),
+        var result = await unifiClient.ExecuteRequest(StaticDnsUrl.AppendPathSegments(id),
         async (request) =>
             {
                 await request.DeleteAsync();
@@ -94,7 +97,7 @@ public class UnifiDnsService(
     {
         try
         {
-            var result = await unifiClient.ExecuteRequest(unifiClient.BaseApiUrlV2.AppendPathSegments(unifiClient.SiteId, "static-dns"),
+            var result = await unifiClient.ExecuteRequest(StaticDnsUrl,
                 async (request) =>
                 {
                     return await request.GetJsonAsync<List<UniHostRecord>>();
@@ -113,7 +116,7 @@ public class UnifiDnsService(
     {
         try
         {
-            var result = await unifiClient.ExecuteRequest(unifiClient.BaseApiUrlV2.AppendPathSegments(unifiClient.SiteId, "static-dns", "devices"),
+            var result = await unifiClient.ExecuteRequest(StaticDnsUrl.AppendPathSegments("devices"),
                 async (request) =>
                 {
                     return await request.GetJsonAsync<List<UniDeviceDnsRecord>>();

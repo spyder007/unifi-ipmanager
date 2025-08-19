@@ -86,6 +86,25 @@ public class ClusterDnsService(
         {
             var dnsRecords = await UnifiDnsService.GetHostDnsRecords();
 
+            if (!dnsRecords.Success)
+            {
+                return new ServiceResult<ClusterDns>
+                {
+                    Success = false,
+                    Errors = dnsRecords.Errors
+                };
+            }
+
+            // need at least one CP for a cluster definition
+            if (!dnsRecords.Data.Any(r => r.Hostname.StartsWith($"cp-{name}")))
+            {
+                return new ServiceResult<ClusterDns>
+                {
+                    Success = false,
+                    Errors = ["No control plane records found for the specified cluster."]
+                };
+            }
+
             var clusterDns = new ClusterDns
             {
                 Name = name,
