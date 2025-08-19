@@ -112,6 +112,56 @@ public class UnifiServiceTests
     }
 
     [Test]
+    public async Task GetAllFixedClients_GetAllFixedIpClientsFails()
+    {
+        _unifiClientMock.Setup(c => c.ExecuteRequest(
+            It.IsAny<Url>(),
+            It.IsAny<Func<IFlurlRequest, Task<UniResponse<List<UniClient>>>>>(),
+            false))
+            .ThrowsAsync(new Exception("Flurl Error"));
+
+        // Act
+        var result = await _service.GetAllFixedClients();
+
+        // Assert
+        Assert.That(result.Success, Is.False);
+        Assert.That(result.Errors, Contains.Item("Flurl Error"));
+    }
+
+    [Test]
+    public async Task GetAllFixedClients_GetDevicesAsUniClientFails()
+    {
+        // Arrange
+        var fixedClients = new List<UniClient>
+        {
+            new() { Id = "1", Name = "Client1", Mac = "00:11:22:33:44:55", UseFixedIp = true, FixedIp = "192.168.1.100" }
+        };
+
+        _unifiClientMock.SetupSequence(c => c.ExecuteRequest(
+            It.IsAny<Url>(),
+            It.IsAny<Func<IFlurlRequest, Task<UniResponse<List<UniClient>>>>>(),
+            false))
+            .ReturnsAsync(new ServiceResult<List<UniClient>> { Success = true, Data = fixedClients });
+
+        _unifiClientMock.Setup(c => c.ExecuteRequest(
+            It.IsAny<Url>(),
+            It.IsAny<Func<IFlurlRequest, Task<UniResponse<List<UniDevice>>>>>(),
+            false))
+            .ThrowsAsync(new Exception("Flurl Error"));
+
+        _ipServiceMock.Setup(i => i.GetIpGroupForAddress("192.168.1.100")).Returns("Group1");
+        _ipServiceMock.Setup(i => i.GetIpGroupForAddress("192.168.1.101")).Returns("Group1");
+
+        // Act
+        var result = await _service.GetAllFixedClients();
+
+        // Assert
+        Assert.That(result.Success, Is.False);
+        Assert.That(result.Errors, Contains.Item("Flurl Error"));
+    }
+
+
+    [Test]
     public async Task CreateClient_Success()
     {
         // Arrange
