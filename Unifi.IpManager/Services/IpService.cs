@@ -22,6 +22,7 @@ public class IpService(IOptions<IpOptions> options, ILogger<IpService> logger, I
 
     public async Task<string> GetUnusedGroupIpAddress(string name, List<string> usedIps)
     {
+        ArgumentNullException.ThrowIfNull(usedIps);    
         var ipGroup = IpOptions.IpGroups.Find(g => g.Name == name);
 
         if (ipGroup == null)
@@ -36,7 +37,7 @@ public class IpService(IOptions<IpOptions> options, ILogger<IpService> logger, I
             foreach (var block in ipGroup.Blocks)
             {
                 var lastIpDigit = block.Min;
-                while (lastIpDigit < block.Max)
+                while (lastIpDigit <= block.Max)
                 {
                     var assignedIp = $"192.168.1.{lastIpDigit}";
                     if (usedIps.TrueForAll(ip => ip != assignedIp) && !await IpInCooldown(assignedIp))
@@ -59,7 +60,7 @@ public class IpService(IOptions<IpOptions> options, ILogger<IpService> logger, I
             return string.Empty;
         }
 
-        var match = System.Text.RegularExpressions.Regex.Match(ipAddress, "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})");
+        var match = System.Text.RegularExpressions.Regex.Match(ipAddress, "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$");
         if (!match.Success)
         {
             return string.Empty;
@@ -74,14 +75,25 @@ public class IpService(IOptions<IpOptions> options, ILogger<IpService> logger, I
 
     public async Task ReturnIpAddress(string ipAddress)
     {
+        if (string.IsNullOrWhiteSpace(ipAddress))
+        {
+            return;
+        }
         string cacheKey = GetCooldownKey(ipAddress);
         // When the IP is returned, set a record in the cache with an absolute expiration
-        var cachedIp = await Cache.GetAsync(cacheKey);
-        if (cachedIp == null)
+        try
         {
-            var dnsOptions =
-                new DistributedCacheEntryOptions().SetAbsoluteExpiration(DateTime.Now.AddMinutes(IpOptions.IpCooldownMinutes));
-            await Cache.SetAsync(cacheKey, Encoding.UTF8.GetBytes(ipAddress), dnsOptions);
+            var cachedIp = await Cache.GetAsync(cacheKey);
+            if (cachedIp == null)
+            {
+                var dnsOptions =
+                    new DistributedCacheEntryOptions().SetAbsoluteExpiration(DateTime.Now.AddMinutes(IpOptions.IpCooldownMinutes));
+                await Cache.SetAsync(cacheKey, Encoding.UTF8.GetBytes(ipAddress), dnsOptions);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error caching returned IP address {IpAddress}", ipAddress);
         }
     }
 

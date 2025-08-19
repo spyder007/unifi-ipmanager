@@ -71,6 +71,66 @@ public class UnifiDnsServiceTests
     }
 
     [Test]
+    public async Task GetHostDnsRecords_HandleDeviceCallFailed()
+    {
+        // Arrange
+        var staticRecords = new List<UniHostRecord>
+        {
+            new() { Id = "1", Key = "host1", Value = "192.168.1.101", RecordType = "A" }
+        };
+
+        _unifiClientMock.Setup(c => c.ExecuteRequest(
+            It.IsAny<Url>(),
+            It.IsAny<Func<IFlurlRequest, Task<List<UniDeviceDnsRecord>>>>(),
+            false))
+            .ReturnsAsync(new ServiceResult<List<UniDeviceDnsRecord>> { Success = false, Errors = { "Flurl Error" } });
+
+        _unifiClientMock.Setup(c => c.ExecuteRequest(
+            It.IsAny<Url>(),
+            It.IsAny<Func<IFlurlRequest, Task<List<UniHostRecord>>>>(),
+            false))
+            .ReturnsAsync(new ServiceResult<List<UniHostRecord>> { Success = true, Data = staticRecords });
+
+        // Act
+        var result = await _service.GetHostDnsRecords();
+
+        // Assert
+        Assert.That(result.Success, Is.True);
+        Assert.That(result.Data, Has.Count.EqualTo(1));
+        Assert.That(result.Data.Any(r => r.Hostname == "host1" && !r.DeviceLock), Is.True);
+    }
+
+    [Test]
+    public async Task GetHostDnsRecords_HandleDeviceCallException()
+    {
+        // Arrange
+        var staticRecords = new List<UniHostRecord>
+        {
+            new() { Id = "1", Key = "host1", Value = "192.168.1.101", RecordType = "A" }
+        };
+
+        _unifiClientMock.Setup(c => c.ExecuteRequest(
+            It.IsAny<Url>(),
+            It.IsAny<Func<IFlurlRequest, Task<List<UniDeviceDnsRecord>>>>(),
+            false))
+            .ThrowsAsync(new Exception("Flurl Error"));
+
+        _unifiClientMock.Setup(c => c.ExecuteRequest(
+            It.IsAny<Url>(),
+            It.IsAny<Func<IFlurlRequest, Task<List<UniHostRecord>>>>(),
+            false))
+            .ReturnsAsync(new ServiceResult<List<UniHostRecord>> { Success = true, Data = staticRecords });
+
+        // Act
+        var result = await _service.GetHostDnsRecords();
+
+        // Assert
+        Assert.That(result.Success, Is.True);
+        Assert.That(result.Data, Has.Count.EqualTo(1));
+        Assert.That(result.Data.Any(r => r.Hostname == "host1" && !r.DeviceLock), Is.True);
+    }
+
+    [Test]
     public async Task CreateHostDnsRecord_ReturnsCreatedRecord()
     {
         // Arrange
@@ -176,6 +236,36 @@ public class UnifiDnsServiceTests
             It.IsAny<Func<IFlurlRequest, Task<List<UniDeviceDnsRecord>>>>(),
             false))
             .ReturnsAsync(new ServiceResult<List<UniDeviceDnsRecord>> { Success = false, Data = new List<UniDeviceDnsRecord>() });
+
+        _unifiClientMock.Setup(c => c.ExecuteRequest(
+            It.IsAny<Url>(),
+            It.IsAny<Func<IFlurlRequest, Task<List<UniHostRecord>>>>(),
+            false))
+            .ReturnsAsync(new ServiceResult<List<UniHostRecord>> { Success = true, Data = staticRecords });
+
+        // Act
+        var result = await _service.GetHostDnsRecords();
+
+        // Assert
+        Assert.That(result.Success, Is.True);
+        Assert.That(result.Data, Has.Count.EqualTo(1));
+        Assert.That(result.Data[0].Hostname, Is.EqualTo("host1.local"));
+    }
+
+    [Test]
+    public async Task GetHostDnsRecords_HandlesMixedSuccessFailureException()
+    {
+        // Arrange - devices fail, static dns succeeds
+        var staticRecords = new List<UniHostRecord>
+        {
+            new() { Id = "1",  Key = "host1.local", Value = "192.168.1.101", RecordType = "A" }
+        };
+
+        _unifiClientMock.Setup(c => c.ExecuteRequest(
+            It.IsAny<Url>(),
+            It.IsAny<Func<IFlurlRequest, Task<List<UniDeviceDnsRecord>>>>(),
+            false))
+            .ThrowsAsync(new Exception("Flurl Error"));
 
         _unifiClientMock.Setup(c => c.ExecuteRequest(
             It.IsAny<Url>(),
