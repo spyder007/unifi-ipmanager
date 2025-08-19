@@ -11,10 +11,12 @@ using Unifi.IpManager.Models.Unifi;
 using Unifi.IpManager.Options;
 using System.IdentityModel.Tokens.Jwt;
 using Spydersoft.Platform.Attributes;
+using System.Diagnostics.CodeAnalysis;
 
 
 namespace Unifi.IpManager.Services;
 
+[ExcludeFromCodeCoverage(Justification = "This class is a service client and does not require unit tests.")]
 [DependencyInjection(typeof(IUnifiClient), LifetimeOfService.Singleton)]
 public class UnifiClient(
     IOptions<UnifiControllerOptions> options,
