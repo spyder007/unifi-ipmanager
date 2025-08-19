@@ -83,7 +83,7 @@ public class UnifiServiceTests
         };
         var devices = new List<UniDevice>
         {
-            new() { Id = "2", Name = "Device1", Mac = "00:11:22:33:44:66", Network = new UniNetworkConfig { Ip = "192.168.1.101" } }
+            new() { Id = "2", Name = "Device1", Mac = "00:11:22:33:44:66", Network = new UniNetworkConfig { Ip = "192.168.1.101", Netmask = "255.255.255.0", Type = "static" } }
         };
 
         _unifiClientMock.SetupSequence(c => c.ExecuteRequest(
