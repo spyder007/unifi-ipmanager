@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
+using System.Security.Cryptography;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -106,7 +107,6 @@ public class UnifiService(
         {
             DnsHostname = editClientRequest.Hostname,
             SetOnDevice = false,
-            SyncDnsHostName = editClientRequest.SyncDns
         };
 
         var noteString = JsonConvert.SerializeObject(note, new JsonSerializerSettings
@@ -205,7 +205,6 @@ public class UnifiService(
         {
             DnsHostname = request.HostName,
             SetOnDevice = false,
-            SyncDnsHostName = request.SyncDns
         };
 
         var noteString = JsonConvert.SerializeObject(note, new JsonSerializerSettings
@@ -235,10 +234,14 @@ public class UnifiService(
 
         if (request.StaticIp)
         {
-            var assignedIp = await IpService.GetUnusedGroupIpAddress(request.Group, clients.Select(c => c.FixedIp).ToList());
-            if (!string.IsNullOrWhiteSpace(assignedIp))
+            var network = await GetNetwork(request.Network);
+            if (network != null)
             {
-                addRequest.FixedIp = assignedIp;
+                var assignedIp = await IpService.GetUnusedNetworkIpAddress(network, clients.Select(c => c.FixedIp).ToList());
+                if (!string.IsNullOrWhiteSpace(assignedIp))
+                {
+                    addRequest.FixedIp = assignedIp;
+                }
             }
         }
 
@@ -300,11 +303,6 @@ public class UnifiService(
                 {
                     client.Name = client.Hostname;
                 }
-
-                if (client.UseFixedIp)
-                {
-                    client.IpGroup = IpService.GetIpGroupForAddress(client.FixedIp);
-                }
             });
             return data.Data.Where(uc => uc.UseFixedIp).ToList();
         }
@@ -357,10 +355,6 @@ public class UnifiService(
                 {
                     client.Name = client.Hostname;
                 }
-                if (client.UseFixedIp)
-                {
-                    client.IpGroup = IpService.GetIpGroupForAddress(client.FixedIp);
-                }
             });
             result.MarkSuccessful(data.Data[0]);
         }
@@ -392,8 +386,7 @@ public class UnifiService(
                         Name = client.Name,
                         Mac = client.Mac,
                         UseFixedIp = true,
-                        ObjectType = "device",
-                        IpGroup = IpService.GetIpGroupForAddress(client.Network.Ip)
+                        ObjectType = "device"
                     });
                 }
                 result.MarkSuccessful(devicesClients);
@@ -413,14 +406,16 @@ public class UnifiService(
 
     private async Task<string> GetNetworkId(string networkName)
     {
+        var network = await GetNetwork(networkName);
+        return network?.Id;
+    }
+
+    private async Task<UnifiNetwork> GetNetwork(string networkName)
+    {
         var networks = await GetAllNetworks();
         if (networks.Success)
         {
-            UnifiNetwork network = networks.Data.Find(n => n.Name == networkName);
-            if (network != null)
-            {
-                return network.Id;
-            }
+            return networks.Data.Find(n => n.Name == networkName);
         }
         return null;
     }
@@ -431,17 +426,24 @@ public class UnifiService(
     private static string GenerateMacAddress()
     {
         var sBuilder = new StringBuilder();
-        var r = new Random();
-        _ = sBuilder.Append("00:15:5D:");
-        for (int i = 0; i < 3; i++)
+        // Use a locally administered unicast MAC.
+        // Setting the first octet to 02 (00000010) marks the address as locally
+        // administered (U/L bit = 1) and unicast (I/G bit = 0).
+        _ = sBuilder.Append("02");
+
+        // Generate 5 random bytes using a cryptographically strong RNG.
+        var bytes = new byte[5];
+        using (var rng = RandomNumberGenerator.Create())
         {
-            var number = r.Next(0, 255);
-            _ = sBuilder.Append(number.ToString("X2"));
-            if (i < 2)
-            {
-                _ = sBuilder.Append(':');
-            }
+            rng.GetBytes(bytes);
         }
+
+        for (int i = 0; i < bytes.Length; i++)
+        {
+            _ = sBuilder.Append(':');
+            _ = sBuilder.Append(bytes[i].ToString("X2"));
+        }
+
         return sBuilder.ToString().ToUpper();
     }
 

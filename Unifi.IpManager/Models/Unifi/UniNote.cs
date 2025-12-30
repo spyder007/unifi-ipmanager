@@ -13,20 +13,11 @@ public class UniNote
     [JsonPropertyName("dns_hostname")]
     public string DnsHostname { get; set; }
 
-    [JsonProperty("sync_dnshostname")]
-    [JsonPropertyName("sync_dnshostname")]
-    public bool? SyncDnsHostName { get; set; }
-
     public void Update(UniNote notes)
     {
         if (notes?.SetOnDevice != null)
         {
             SetOnDevice = notes.SetOnDevice;
-        }
-
-        if (notes?.SyncDnsHostName != null)
-        {
-            SyncDnsHostName = notes.SyncDnsHostName;
         }
 
         if (notes?.DnsHostname != null)

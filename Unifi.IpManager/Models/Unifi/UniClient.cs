@@ -85,11 +85,6 @@ public class UniClient
     /// <value>The type of the object.</value>
     public string ObjectType { get; set; }
 
-    /// <summary>
-    /// Gets or sets the IPBlock Name associated with this IP
-    /// </summary>
-    public string IpGroup { get; set; }
-
     public UniNote Notes
     {
         get {
