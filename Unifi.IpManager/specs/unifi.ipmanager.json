@@ -501,11 +501,6 @@
             "description": "Gets or sets the type of the object.",
             "nullable": true
           },
-          "ipGroup": {
-            "type": "string",
-            "description": "Gets or sets the IPBlock Name associated with this IP",
-            "nullable": true
-          },
           "notes": {
             "nullable": true,
             "oneOf": [
@@ -526,10 +521,6 @@
           },
           "dns_hostname": {
             "type": "string",
-            "nullable": true
-          },
-          "sync_dnshostname": {
-            "type": "boolean",
             "nullable": true
           }
         }
@@ -639,10 +630,6 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "group": {
-            "type": "string",
-            "nullable": true
-          },
           "name": {
             "type": "string",
             "nullable": true

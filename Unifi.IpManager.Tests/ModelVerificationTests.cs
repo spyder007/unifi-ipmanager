@@ -29,7 +29,6 @@ namespace Unifi.IpManager.Tests
                 {
                     DnsHostname = "test",
                     SetOnDevice = true,
-                    SyncDnsHostName = false
                 }
             };
 
@@ -70,7 +69,6 @@ namespace Unifi.IpManager.Tests
         {
             var provisionRequest = new ProvisionRequest
             {
-                Group = "test",
                 Name = "test",
                 HostName = "test",
                 SyncDns = true,
@@ -80,7 +78,6 @@ namespace Unifi.IpManager.Tests
             Assert.Multiple(() =>
             {
                 Assert.That(provisionRequest, Is.Not.Null);
-                Assert.That(provisionRequest, Has.Property("Group").TypeOf<string>());
                 Assert.That(provisionRequest, Has.Property("Name").TypeOf<string>());
                 Assert.That(provisionRequest, Has.Property("HostName").TypeOf<string>());
                 Assert.That(provisionRequest, Has.Property("SyncDns").TypeOf<bool>());
@@ -133,49 +130,6 @@ namespace Unifi.IpManager.Tests
                 Assert.That(editUniClientRequest, Has.Property("Name").TypeOf<string>());
                 Assert.That(editUniClientRequest, Has.Property("HostName").TypeOf<string>());
                 Assert.That(editUniClientRequest, Has.Property("Note").TypeOf<string>());
-            });
-        }
-
-        [Test]
-        public void IpBlockPropertyTest()
-        {
-            var ipBlock = new IpBlock
-            {
-                Min = 0,
-                Max = 100
-            };
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(ipBlock, Is.Not.Null);
-                Assert.That(ipBlock, Has.Property("Min").TypeOf<int>());
-                Assert.That(ipBlock, Has.Property("Max").TypeOf<int>());
-            });
-        }
-
-        [Test]
-        public void IpGroupPropertyTest()
-        {
-            var ipGroup = new IpGroup
-            {
-                Name = "test",
-                Blocks =
-                [
-                    new()
-                    {
-                        Min = 0,
-                        Max = 100
-                    }
-                ]
-
-            };
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(ipGroup, Is.Not.Null);
-                Assert.That(ipGroup, Has.Property("Name").TypeOf<string>());
-                Assert.That(ipGroup, Has.Property("Blocks").TypeOf<List<IpBlock>>());
-                Assert.That(ipGroup.Blocks, Has.Exactly(1).Items);
             });
         }
 

@@ -98,9 +98,6 @@ public class UnifiServiceTests
             false))
             .ReturnsAsync(new ServiceResult<List<UniDevice>> { Success = true, Data = devices });
 
-        _ipServiceMock.Setup(i => i.GetIpGroupForAddress("192.168.1.100")).Returns("Group1");
-        _ipServiceMock.Setup(i => i.GetIpGroupForAddress("192.168.1.101")).Returns("Group1");
-
         // Act
         var result = await _service.GetAllFixedClients();
 
@@ -148,9 +145,6 @@ public class UnifiServiceTests
             It.IsAny<Func<IFlurlRequest, Task<UniResponse<List<UniDevice>>>>>(),
             false))
             .ThrowsAsync(new Exception("Flurl Error"));
-
-        _ipServiceMock.Setup(i => i.GetIpGroupForAddress("192.168.1.100")).Returns("Group1");
-        _ipServiceMock.Setup(i => i.GetIpGroupForAddress("192.168.1.101")).Returns("Group1");
 
         // Act
         var result = await _service.GetAllFixedClients();
@@ -294,8 +288,7 @@ public class UnifiServiceTests
             HostName = "provisioned",
             StaticIp = true,
             SyncDns = true,
-            Network = "LAN",
-            Group = "TestGroup"
+            Network = "LAN"
         };
 
         var existingClients = new List<UniClient>
@@ -338,7 +331,7 @@ public class UnifiServiceTests
             true))
             .ReturnsAsync(new ServiceResult<UniClient> { Success = true, Data = provisionedClient });
 
-        _ipServiceMock.Setup(i => i.GetUnusedGroupIpAddress("TestGroup", It.IsAny<List<string>>()))
+        _ipServiceMock.Setup(i => i.GetUnusedNetworkIpAddress(It.IsAny<UnifiNetwork>(), It.IsAny<List<string>>()))
             .ReturnsAsync("192.168.1.100");
 
         // Act

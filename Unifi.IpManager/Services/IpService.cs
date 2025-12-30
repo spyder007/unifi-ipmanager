@@ -7,6 +7,8 @@ using Microsoft.Extensions.Caching.Distributed;
 using Unifi.IpManager.Options;
 using System.Threading.Tasks;
 using Spydersoft.Platform.Attributes;
+using Unifi.IpManager.Models.Unifi;
+using System.Net;
 
 namespace Unifi.IpManager.Services;
 
@@ -20,60 +22,152 @@ public class IpService(IOptions<IpOptions> options, ILogger<IpService> logger, I
 
     private const string IpCooldownCacheKeyTemplate = "Unifi.IpManager.IpCooldown.{0}";
 
-    public async Task<string> GetUnusedGroupIpAddress(string name, List<string> usedIps)
+    public async Task<string> GetUnusedNetworkIpAddress(UnifiNetwork network, List<string> usedIps)
     {
-        ArgumentNullException.ThrowIfNull(usedIps);    
-        var ipGroup = IpOptions.IpGroups.Find(g => g.Name == name);
+        ArgumentNullException.ThrowIfNull(usedIps);
+        ArgumentNullException.ThrowIfNull(network);
 
-        if (ipGroup == null)
+        if (string.IsNullOrWhiteSpace(network.IpSubnet) || string.IsNullOrWhiteSpace(network.DhcpStartAddress))
         {
+            Logger.LogWarning("Network {NetworkName} is missing IpSubnet or DhcpStartAddress", network.Name);
             return string.Empty;
         }
+
+        // Parse the subnet to get the base IP and mask (e.g., "192.168.10.0/23")
+        var subnetParts = network.IpSubnet.Split('/');
+        if (subnetParts.Length != 2)
+        {
+            Logger.LogWarning("Invalid subnet format for network {NetworkName}: {Subnet}", network.Name, network.IpSubnet);
+            return string.Empty;
+        }
+
+        var baseIpAddress = subnetParts[0];
+        if (!IPAddress.TryParse(baseIpAddress, out var parsedBaseIp))
+        {
+            Logger.LogWarning("Invalid base IP address for network {NetworkName}: {BaseIp}", network.Name, baseIpAddress);
+            return string.Empty;
+        }
+
+        if (!int.TryParse(subnetParts[1], out var prefixLength) || prefixLength < 0 || prefixLength > 32)
+        {
+            Logger.LogWarning("Invalid subnet prefix length for network {NetworkName}: {Prefix}", network.Name, subnetParts[1]);
+            return string.Empty;
+        }
+
+        // Parse DHCP start address to determine the upper limit
+        if (!IPAddress.TryParse(network.DhcpStartAddress, out var dhcpStartIp))
+        {
+            Logger.LogWarning("Invalid DHCP start address for network {NetworkName}: {DhcpStart}", network.Name, network.DhcpStartAddress);
+            return string.Empty;
+        }
+
+        // Calculate the network address and starting IP
+        var baseOctets = parsedBaseIp.GetAddressBytes();
+        var dhcpStartOctets = dhcpStartIp.GetAddressBytes();
+
+        // Calculate subnet mask from prefix length
+        var subnetMask = GetSubnetMask(prefixLength);
+        var subnetMaskBytes = subnetMask.GetAddressBytes();
+
+        // Calculate network address by ANDing base IP with subnet mask
+        var networkAddress = new byte[4];
+        for (int i = 0; i < 4; i++)
+        {
+            networkAddress[i] = (byte) (baseOctets[i] & subnetMaskBytes[i]);
+        }
+
+        // Start at network address + 10 (converted to uint for easier arithmetic)
+        var startIpValue = IpToUInt(networkAddress) + 10;
+        var startIpBytes = UIntToIp(startIpValue);
 
         int tries = 0;
         while (tries < 100)
         {
             ++tries;
-            foreach (var block in ipGroup.Blocks)
-            {
-                var lastIpDigit = block.Min;
-                while (lastIpDigit <= block.Max)
-                {
-                    var assignedIp = $"192.168.1.{lastIpDigit}";
-                    if (usedIps.TrueForAll(ip => ip != assignedIp) && !await IpInCooldown(assignedIp))
-                    {
-                        return assignedIp;
-                    }
 
-                    ++lastIpDigit;
+            // Iterate through IP addresses from start to the DHCP start address
+            var currentIpBytes = (byte[]) startIpBytes.Clone();
+            while (CompareIpAddresses(currentIpBytes, dhcpStartOctets) < 0)
+            {
+                var candidateIp = new IPAddress(currentIpBytes).ToString();
+
+                if (usedIps.TrueForAll(ip => ip != candidateIp) && !await IpInCooldown(candidateIp))
+                {
+                    return candidateIp;
+                }
+
+                // Increment IP address
+                if (!IncrementIpAddress(currentIpBytes))
+                {
+                    break;
                 }
             }
         }
-        Logger.LogWarning("No open IPs found for {GroupName}", ipGroup.Name);
+
+        Logger.LogWarning("No open IPs found for network {NetworkName}", network.Name);
         return string.Empty;
     }
 
-    public string GetIpGroupForAddress(string ipAddress)
+    private static bool IncrementIpAddress(byte[] octets)
     {
-        if (string.IsNullOrWhiteSpace(ipAddress))
+        for (int i = octets.Length - 1; i >= 0; i--)
         {
-            return string.Empty;
+            if (octets[i] < 255)
+            {
+                octets[i]++;
+                return true;
+            }
+            octets[i] = 0;
         }
+        return false; // Overflow
+    }
 
-        var match = System.Text.RegularExpressions.Regex.Match(ipAddress,
-            "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$", 
-            System.Text.RegularExpressions.RegexOptions.None,
-            TimeSpan.FromMilliseconds(100));
-        if (!match.Success)
+    private static int CompareIpAddresses(byte[] ip1, byte[] ip2)
+    {
+        for (int i = 0; i < ip1.Length; i++)
         {
-            return string.Empty;
+            if (ip1[i] < ip2[i])
+            {
+                return -1;
+            }
+
+            if (ip1[i] > ip2[i])
+            {
+                return 1;
+            }
         }
+        return 0;
+    }
 
-        var lastIp = int.Parse(match.Groups[4].Value);
+    private static IPAddress GetSubnetMask(int prefixLength)
+    {
+        // Create a 32-bit mask with prefixLength bits set to 1
+        uint mask = prefixLength == 0 ? 0 : 0xFFFFFFFF << (32 - prefixLength);
 
+        // Convert to bytes in network order (big-endian)
+        byte[] bytes = new byte[4];
+        bytes[0] = (byte) (mask >> 24);
+        bytes[1] = (byte) (mask >> 16);
+        bytes[2] = (byte) (mask >> 8);
+        bytes[3] = (byte) mask;
 
-        var group = IpOptions.IpGroups.Find(group => group.Blocks.Exists(b => b.Min <= lastIp && b.Max >= lastIp));
-        return group != null ? group.Name : string.Empty;
+        return new IPAddress(bytes);
+    }
+
+    private static uint IpToUInt(byte[] ipBytes)
+    {
+        return ((uint) ipBytes[0] << 24) | ((uint) ipBytes[1] << 16) | ((uint) ipBytes[2] << 8) | ipBytes[3];
+    }
+
+    private static byte[] UIntToIp(uint value)
+    {
+        return new byte[]
+        {
+            (byte)(value >> 24),
+            (byte)(value >> 16),
+            (byte)(value >> 8),
+            (byte)value
+        };
     }
 
     public async Task ReturnIpAddress(string ipAddress)
