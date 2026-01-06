@@ -277,6 +277,21 @@ public class UnifiService(
             }, true);
     }
 
+    public async Task<ServiceResult<UnifiNetwork>> GetNetworkByName(string name)
+    {
+        var result = new ServiceResult<UnifiNetwork>();
+        var network = await GetNetwork(name);
+        if (network != null)
+        {
+            result.MarkSuccessful(network);
+        }
+        else
+        {
+            result.MarkFailed("Network not found.");
+        }
+        return result;
+    }
+
     #endregion IUnifiService Implementation
 
 
