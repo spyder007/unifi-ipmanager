@@ -41,6 +41,7 @@ public class NetworkController(ILogger<NetworkController> log, IUnifiService uni
     [Route("{name}")]
     public async Task<ActionResult<ServiceResult<UnifiNetwork>>> GetByName(string name)
     {
+        log.LogTrace("Processing request for network by name: {NetworkName}", name);
         return await UnifiService.GetNetworkByName(name);
     }
 }
