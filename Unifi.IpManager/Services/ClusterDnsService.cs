@@ -158,7 +158,7 @@ public class ClusterDnsService(
             var cpProcessResult = await ProcessHostDnsRecords(existingRecord.ControlPlane, clusterDns.ControlPlane);
             var tfProcessResult = await ProcessHostDnsRecords(existingRecord.Traffic, clusterDns.Traffic);
 
-            var success = cpProcessResult.Success && tfProcessResult.Success;        
+            var success = cpProcessResult.Success && tfProcessResult.Success;
 
             return !success
                 ? new ServiceResult<ClusterDns>
@@ -199,7 +199,7 @@ public class ClusterDnsService(
 
         foreach (var existingRecordId in existingRecords.Select(r => r.Id))
         {
-           // Check if the record is in the requested records
+            // Check if the record is in the requested records
             var requestedRecord = requestedRecords.FirstOrDefault(r => r.Id == existingRecordId);
 
             if (requestedRecord != null)

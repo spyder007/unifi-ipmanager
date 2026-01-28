@@ -37,8 +37,8 @@ public class ClusterDnsController(IClusterDnsService clusterDnsService)
     [Produces(typeof(ServiceResult<ClusterDns>))]
     public async Task<ActionResult<ServiceResult<ClusterDns>>> Put([FromRoute] string name, [FromBody] ClusterDns incomingCluster)
     {
-       incomingCluster.Name = name;
-       return await ClusterDnsService.UpdateClusterDns(incomingCluster);
+        incomingCluster.Name = name;
+        return await ClusterDnsService.UpdateClusterDns(incomingCluster);
     }
 
     [HttpPost]

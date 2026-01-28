@@ -27,7 +27,7 @@ pr:
 extends:
   template: pipelines/build-api/v1.yml@templates
   parameters:
-    buildProject: Unifi.IpManager.sln
+    buildProject: Unifi.IpManager.slnx
     publishProject: Unifi.IpManager/Unifi.IpManager.csproj
     netCoreVersion: '9.0.x'
     artifactName: unifiIpManager

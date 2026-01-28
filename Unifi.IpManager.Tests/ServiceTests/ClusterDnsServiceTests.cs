@@ -178,7 +178,7 @@ public class ClusterDnsServiceTests
         Assert.That(result.Errors, Contains.Item("DNS fetch error"));
     }
 
-        [Test]
+    [Test]
     public async Task GetClusterDns_FetchErrorsHandling()
     {
         // Arrange

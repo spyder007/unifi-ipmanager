@@ -49,7 +49,8 @@ namespace Unifi.IpManager.Tests.ControllerTests
         {
             var logMock = new Mock<ILogger<ClientController>>();
             var unifiMock = new Mock<IUnifiService>();
-            var newRequest = new NewClientRequest {
+            var newRequest = new NewClientRequest
+            {
                 Name = "testclient",
                 MacAddress = "00:11:22:33:44:55",
                 IpAddress = "192.168.1.100",
@@ -111,7 +112,8 @@ namespace Unifi.IpManager.Tests.ControllerTests
         {
             var logMock = new Mock<ILogger<ClientController>>();
             var unifiMock = new Mock<IUnifiService>();
-            var provisionRequest = new ProvisionRequest {
+            var provisionRequest = new ProvisionRequest
+            {
                 Name = "provclient",
                 StaticIp = true,
                 SyncDns = true

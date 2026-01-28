@@ -68,10 +68,10 @@ public class ClusterDnsControllerTests
         var zoneName = "example.com";
 
         _clusterDnsServiceMock.Setup(s => s.GetClusterDns(clusterName, zoneName))
-            .ReturnsAsync(new ServiceResult<ClusterDns> 
-            { 
-                Success = false, 
-                Errors = new List<string> { "Cluster not found" } 
+            .ReturnsAsync(new ServiceResult<ClusterDns>
+            {
+                Success = false,
+                Errors = new List<string> { "Cluster not found" }
             });
 
         // Act
@@ -181,8 +181,8 @@ public class ClusterDnsControllerTests
         // Verify that the name was set from the route parameter
         Assert.That(incomingCluster.Name, Is.EqualTo(clusterName));
 
-        _clusterDnsServiceMock.Verify(s => s.UpdateClusterDns(It.Is<ClusterDns>(c => 
-            c.Name == clusterName && 
+        _clusterDnsServiceMock.Verify(s => s.UpdateClusterDns(It.Is<ClusterDns>(c =>
+            c.Name == clusterName &&
             c.ZoneName == "example.com")), Times.Once);
     }
 
@@ -200,10 +200,10 @@ public class ClusterDnsControllerTests
         };
 
         _clusterDnsServiceMock.Setup(s => s.UpdateClusterDns(It.IsAny<ClusterDns>()))
-            .ReturnsAsync(new ServiceResult<ClusterDns> 
-            { 
-                Success = false, 
-                Errors = new List<string> { "Update failed" } 
+            .ReturnsAsync(new ServiceResult<ClusterDns>
+            {
+                Success = false,
+                Errors = new List<string> { "Update failed" }
             });
 
         // Act
@@ -228,10 +228,10 @@ public class ClusterDnsControllerTests
         ClusterDns? incomingCluster = null;
 
         _clusterDnsServiceMock.Setup(s => s.UpdateClusterDns(It.IsAny<ClusterDns>()))
-            .ReturnsAsync(new ServiceResult<ClusterDns> 
-            { 
-                Success = false, 
-                Errors = new List<string> { "Invalid cluster data" } 
+            .ReturnsAsync(new ServiceResult<ClusterDns>
+            {
+                Success = false,
+                Errors = new List<string> { "Invalid cluster data" }
             });
 
         // Act & Assert
@@ -295,10 +295,10 @@ public class ClusterDnsControllerTests
         };
 
         _clusterDnsServiceMock.Setup(s => s.CreateClusterDns(newRequest))
-            .ReturnsAsync(new ServiceResult<ClusterDns> 
-            { 
-                Success = false, 
-                Errors = new List<string> { "Creation failed" } 
+            .ReturnsAsync(new ServiceResult<ClusterDns>
+            {
+                Success = false,
+                Errors = new List<string> { "Creation failed" }
             });
 
         // Act
@@ -319,10 +319,10 @@ public class ClusterDnsControllerTests
         NewClusterRequest? newRequest = null;
 
         _clusterDnsServiceMock.Setup(s => s.CreateClusterDns(It.IsAny<NewClusterRequest>()))
-            .ReturnsAsync(new ServiceResult<ClusterDns> 
-            { 
-                Success = false, 
-                Errors = new List<string> { "Invalid request" } 
+            .ReturnsAsync(new ServiceResult<ClusterDns>
+            {
+                Success = false,
+                Errors = new List<string> { "Invalid request" }
             });
 
         // Act
@@ -402,10 +402,10 @@ public class ClusterDnsControllerTests
         var zoneName = "sub.example.com";
 
         _clusterDnsServiceMock.Setup(s => s.GetClusterDns(clusterName, zoneName))
-            .ReturnsAsync(new ServiceResult<ClusterDns> 
-            { 
-                Success = true, 
-                Data = new ClusterDns { Name = clusterName, ZoneName = zoneName } 
+            .ReturnsAsync(new ServiceResult<ClusterDns>
+            {
+                Success = true,
+                Data = new ClusterDns { Name = clusterName, ZoneName = zoneName }
             });
 
         // Act
