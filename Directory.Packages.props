@@ -5,11 +5,11 @@
 
   <ItemGroup>
     <!-- Main Project Packages -->
-    <PackageVersion Include="Asp.Versioning.Mvc" Version="8.1.0" />
+    <PackageVersion Include="Asp.Versioning.Mvc" Version="8.1.1" />
     <PackageVersion Include="Flurl.Http" Version="4.0.2" />
-    <PackageVersion Include="NSwag.AspNetCore" Version="14.2.0" />
-    <PackageVersion Include="NSwag.MSBuild" Version="14.2.0" />
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.6.0.109712" />
+    <PackageVersion Include="NSwag.AspNetCore" Version="14.6.3" />
+    <PackageVersion Include="NSwag.MSBuild" Version="14.6.3" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.18.0.131500" />
     <PackageVersion Include="Spydersoft.Platform.Hosting" Version="2.1.0" />
     
     <!-- Test Project Packages -->
