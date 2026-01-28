@@ -419,6 +419,38 @@
           }
         }
       }
+    },
+    "/network/{name}": {
+      "get": {
+        "tags": [
+          "Network"
+        ],
+        "summary": "Gets this instance.",
+        "operationId": "Network_GetByName",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ActionResult<Models.Info>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceResultOfUnifiNetwork"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -848,6 +880,68 @@
           "dnsZone": {
             "type": "string",
             "nullable": true
+          }
+        }
+      },
+      "ServiceResultOfUnifiNetwork": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ServiceResult"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "data": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/UnifiNetwork"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "UnifiNetwork": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "site_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "vlan_enabled": {
+            "type": "boolean"
+          },
+          "networkgroup": {
+            "type": "string",
+            "nullable": true
+          },
+          "dhcpd_start": {
+            "type": "string",
+            "nullable": true
+          },
+          "dhcpd_stop": {
+            "type": "string",
+            "nullable": true
+          },
+          "ip_subnet": {
+            "type": "string",
+            "nullable": true
+          },
+          "vlan": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       }

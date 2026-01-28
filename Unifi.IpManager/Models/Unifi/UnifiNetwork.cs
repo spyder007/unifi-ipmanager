@@ -34,4 +34,8 @@ public class UnifiNetwork
     [JsonProperty("ip_subnet")]
     [JsonPropertyName("ip_subnet")]
     public string IpSubnet { get; set; }
+
+    [JsonProperty("vlan")]
+    [JsonPropertyName("vlan")]
+    public int Vlan { get; set; }
 }

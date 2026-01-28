@@ -15,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 AppHealthCheckOptions healthCheckOptions = new();
 builder.AddSpydersoftTelemetry(typeof(Program).Assembly)
-        .AddSpydersoftSerilog();
+        .AddSpydersoftSerilog(true);
 healthCheckOptions = builder.AddSpydersoftHealthChecks();
 
 _ = builder.Services.AddSingleton(() => builder.Configuration)
