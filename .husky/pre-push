@@ -1,0 +1,2 @@
+dotnet build Unifi.IpManager.slnx
+dotnet test Unifi.IpManager.slnx

@@ -269,7 +269,7 @@ public class HostRecordExtensionsTests
         Assert.That(backToHostRecord.Hostname, Is.EqualTo(originalRecord.Hostname));
         Assert.That(backToHostRecord.IpAddress, Is.EqualTo(originalRecord.IpAddress));
         Assert.That(backToHostRecord.RecordType, Is.EqualTo(originalRecord.RecordType));
-        
+
         // These values change during conversion
         Assert.That(backToHostRecord.MacAddress, Is.Null); // Lost in conversion
         Assert.That(backToHostRecord.DeviceLock, Is.False); // Always false for UniHostRecord conversion
@@ -348,7 +348,7 @@ public class HostRecordExtensionsTests
         Assert.That(uniRecord.Key, Is.EqualTo(longString));
         Assert.That(uniRecord.Value, Is.EqualTo(longString));
         Assert.That(uniRecord.RecordType, Is.EqualTo(longString));
-        
+
         Assert.That(backToHost.Id, Is.EqualTo(longString));
         Assert.That(backToHost.Hostname, Is.EqualTo(longString));
         Assert.That(backToHost.IpAddress, Is.EqualTo(longString));

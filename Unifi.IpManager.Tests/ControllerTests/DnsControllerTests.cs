@@ -55,10 +55,10 @@ public class DnsControllerTests
     {
         // Arrange
         _unifiDnsServiceMock.Setup(s => s.GetHostDnsRecords())
-            .ReturnsAsync(new ServiceResult<List<HostDnsRecord>> 
-            { 
-                Success = false, 
-                Errors = new List<string> { "DNS service error" } 
+            .ReturnsAsync(new ServiceResult<List<HostDnsRecord>>
+            {
+                Success = false,
+                Errors = new List<string> { "DNS service error" }
             });
 
         // Act
@@ -118,10 +118,10 @@ public class DnsControllerTests
         };
 
         _unifiDnsServiceMock.Setup(s => s.CreateHostDnsRecord(hostRecord))
-            .ReturnsAsync(new ServiceResult<HostDnsRecord> 
-            { 
-                Success = false, 
-                Errors = new List<string> { "Creation failed" } 
+            .ReturnsAsync(new ServiceResult<HostDnsRecord>
+            {
+                Success = false,
+                Errors = new List<string> { "Creation failed" }
             });
 
         // Act
@@ -168,9 +168,9 @@ public class DnsControllerTests
         Assert.That(result.Value?.Data?.Hostname, Is.EqualTo("updatedhost.example.com"));
 
         // Verify that the ID was set on the host record before calling the service
-        _unifiDnsServiceMock.Verify(s => s.UpdateDnsHostRecord(It.Is<HostDnsRecord>(r => 
-            r.Id == recordId && 
-            r.Hostname == "updatedhost.example.com" && 
+        _unifiDnsServiceMock.Verify(s => s.UpdateDnsHostRecord(It.Is<HostDnsRecord>(r =>
+            r.Id == recordId &&
+            r.Hostname == "updatedhost.example.com" &&
             r.IpAddress == "192.168.1.101")), Times.Once);
     }
 
@@ -187,10 +187,10 @@ public class DnsControllerTests
         };
 
         _unifiDnsServiceMock.Setup(s => s.UpdateDnsHostRecord(It.IsAny<HostDnsRecord>()))
-            .ReturnsAsync(new ServiceResult<HostDnsRecord> 
-            { 
-                Success = false, 
-                Errors = new List<string> { "Update failed" } 
+            .ReturnsAsync(new ServiceResult<HostDnsRecord>
+            {
+                Success = false,
+                Errors = new List<string> { "Update failed" }
             });
 
         // Act
@@ -230,10 +230,10 @@ public class DnsControllerTests
         var recordId = "faildelete123";
 
         _unifiDnsServiceMock.Setup(s => s.DeleteHostDnsRecord(recordId))
-            .ReturnsAsync(new ServiceResult 
-            { 
-                Success = false, 
-                Errors = new List<string> { "Delete failed" } 
+            .ReturnsAsync(new ServiceResult
+            {
+                Success = false,
+                Errors = new List<string> { "Delete failed" }
             });
 
         // Act
@@ -379,10 +379,10 @@ public class DnsControllerTests
     {
         // Arrange
         _unifiDnsServiceMock.Setup(s => s.CreateHostDnsRecord(null))
-            .ReturnsAsync(new ServiceResult<HostDnsRecord> 
-            { 
-                Success = false, 
-                Errors = new List<string> { "Invalid input" } 
+            .ReturnsAsync(new ServiceResult<HostDnsRecord>
+            {
+                Success = false,
+                Errors = new List<string> { "Invalid input" }
             });
 
         // Act
