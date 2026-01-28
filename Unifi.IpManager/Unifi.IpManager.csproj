@@ -9,18 +9,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
-    <PackageReference Include="Flurl.Http" Version="4.0.2" />
-    <PackageReference Include="NSwag.AspNetCore" Version="14.2.0" />
-    <PackageReference Include="NSwag.MSBuild" Version="14.2.0">
+    <PackageReference Include="Asp.Versioning.Mvc" />
+    <PackageReference Include="Flurl.Http" />
+    <PackageReference Include="NSwag.AspNetCore" />
+    <PackageReference Include="NSwag.MSBuild">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.6.0.109712">
+    <PackageReference Include="SonarAnalyzer.CSharp">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Spydersoft.Platform.Hosting" Version="2.1.0" />
+    <PackageReference Include="Spydersoft.Platform.Hosting" />
   </ItemGroup>
 
   <Target Name="NSwag" AfterTargets="Build" Condition=" '$(Configuration)' == 'Debug' ">

@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Main Project Packages -->
+    <PackageVersion Include="Asp.Versioning.Mvc" Version="8.1.0" />
+    <PackageVersion Include="Flurl.Http" Version="4.0.2" />
+    <PackageVersion Include="NSwag.AspNetCore" Version="14.2.0" />
+    <PackageVersion Include="NSwag.MSBuild" Version="14.2.0" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.6.0.109712" />
+    <PackageVersion Include="Spydersoft.Platform.Hosting" Version="2.1.0" />
+    
+    <!-- Test Project Packages -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageVersion Include="Moq" Version="4.20.72" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="NUnit" Version="4.3.2" />
+    <PackageVersion Include="NUnit3TestAdapter" Version="5.0.0" />
+  </ItemGroup>
+</Project>
