@@ -141,13 +141,25 @@ extends:
       buildAndPublishDockerImages: false
       buildAndPublishHelmCharts: false
       executeSonar: true
-      uiExecuteSonar: true
+      # Temporarily disabled: spyder007_unifi-ipmanager-react-ui is a brand
+      # new SonarCloud project (never analyzed before this merge) and its
+      # first CI-based analysis 403'd fetching the quality gate status
+      # (build 6266) -- SonarCloud needs this project created/bound on
+      # sonarcloud.io before CI can publish against it, which needs to
+      # happen there directly. Re-enable once that's done.
+      uiExecuteSonar: false
     ${{ elseif eq(variables['Build.SourceBranchName'], 'main') }}:
       updateHelmConfig: true
       buildAndPublishDockerImages: true
       buildAndPublishHelmCharts: true
       executeSonar: true
-      uiExecuteSonar: true
+      # Temporarily disabled: spyder007_unifi-ipmanager-react-ui is a brand
+      # new SonarCloud project (never analyzed before this merge) and its
+      # first CI-based analysis 403'd fetching the quality gate status
+      # (build 6266) -- SonarCloud needs this project created/bound on
+      # sonarcloud.io before CI can publish against it, which needs to
+      # happen there directly. Re-enable once that's done.
+      uiExecuteSonar: false
     ${{ else }}:
       updateHelmConfig: true
       buildAndPublishDockerImages: true
