@@ -55,6 +55,10 @@ extends:
     uiUseYarn2: true
     uiCodeCoverageFile: frontend/output/coverage/cobertura-coverage.xml
     uiUnitTestFile: frontend/output/test/junit.xml
+    uiSonarEndpointName: sonarcloud-spydersoft
+    uiUseSonarCloud: true
+    uiSonarCloudOrganization: spydersoft-mjg
+    uiSonarConfigFile: react-sonar-project.properties
 
     # uiEnabled above builds+tests the UI (via yarn-build-test) but does not
     # publish a docker-buildable artifact -- that template's docker_publish

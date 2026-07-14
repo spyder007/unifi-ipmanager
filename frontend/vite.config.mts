@@ -28,7 +28,7 @@ export default defineConfig({
     outputFile: "./output/test/junit.xml",
     coverage: {
       provider: "v8",
-      reporter: ["html", "cobertura", "text"],
+      reporter: ["html", "cobertura", "lcov", "text"],
       reportsDirectory: "./output/coverage",
     },
   },
