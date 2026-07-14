@@ -1,4 +1,10 @@
-## Build Pipeline - Build, publish container image, and update helmfile config
+## Build Pipeline - builds the API and web UI, publishes both images, and
+## publishes the combined unifi-ipmanager OCI chart, all from one build
+## number. Replaces the earlier split (unifi-ipmanager's own build-api-only
+## pipeline plus the standalone unifi-client repo's hand-rolled pipeline):
+## API and UI are tightly coupled (one release cadence, one chart), so one
+## atomic build/publish avoids the chart-versioning-vs-image-tagging
+## mismatch a two-repo split would otherwise create.
 resources:
   repositories:
     - repository: templates
@@ -11,6 +17,9 @@ resources:
       name: spyder007/ha-helm-config
 
 trigger:
+  tags:
+    include:
+      - "*"
   branches:
     include:
       - main
@@ -25,39 +34,132 @@ pr:
       - main
 
 extends:
-  template: pipelines/build-api/v1.yml@templates
+  template: pipelines/build-multi-container/v1.yml@templates
   parameters:
-    buildProject: Unifi.IpManager.slnx
-    publishProject: Unifi.IpManager/Unifi.IpManager.csproj
+    gitVersionSpec: '6.0.x'
     netCoreVersion: '9.0.x'
-    artifactName: unifiIpManager
-    artifactZipName: Unifi.IpManager
-    containerRegistryName: github-spydersoft-docker
-    dockerFilePath: Dockerfile.simple
-    dockerImageName: spyder007/unifi-ipmanager
-    imageTagVariableName: unifi_ipmanager
-    helmfileRepoName: helmfileconfig
     externalFeedCredentials: SpydersoftGithub
-    ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranchName'], 'main')) }}:
-      executeSonar: true
-    ${{ else }}:
-      executeSonar: false
-    
+    containerRegistryName: github-spydersoft-docker
+    helmfileRepoName: helmfileconfig
+
+    buildProject: Unifi.IpManager.slnx
+
+    publishProjects:
+      - name: api
+        project: api/Unifi.IpManager/Unifi.IpManager.csproj
+        artifactName: unifiIpManagerApi
+
+    uiEnabled: true
+    uiSourceDirectory: frontend
+    uiNodeVersion: '22.x'
+    uiUseYarn2: true
+    uiCodeCoverageFile: frontend/output/coverage/cobertura-coverage.xml
+    uiUnitTestFile: frontend/output/test/junit.xml
+
+    # uiEnabled above builds+tests the UI (via yarn-build-test) but does not
+    # publish a docker-buildable artifact -- that template's docker_publish
+    # stage expects one produced by a dotnet publishProjects entry, and the
+    # UI here has no .NET host at all (raw nginx + static dist/). Reproduce
+    # what the old standalone unifi-client pipeline did itself: archive the
+    # built frontend output and publish it as a named pipeline artifact,
+    # after uiEnabled's yarn build has already produced frontend/dist,
+    # before the dotnet restore/build steps run.
+    #
+    # build-multi-container's docker_publish loop does NOT forward a
+    # per-image prebuildSteps (checked pipelines/build-multi-container/v1.yml
+    # -- the each-loop only passes dockerImageName/containerRegistryName/
+    # artifactName/artifactZipName/dockerFilePath to jobs/build-docker-image),
+    # and extraction always lands at the docker build context root (no
+    # artifactTargetPath support there either) -- unlike the old standalone
+    # unifi-client pipeline, which called that job directly and could pass
+    # both. So the zip itself is shaped to match what frontend/Dockerfile
+    # already expects at the context root (output/ + nginx/default.conf)
+    # instead of relying on a copy step the shared template can't run here.
+    prebuildSteps:
+      - task: CopyFiles@2
+        displayName: "Stage UI Build (dist/ -> output/, matches Dockerfile's COPY output/)"
+        inputs:
+          sourceFolder: "$(Build.SourcesDirectory)/frontend/dist"
+          contents: "**"
+          targetFolder: "$(Build.ArtifactStagingDirectory)/frontendStage/output"
+      - task: CopyFiles@2
+        displayName: "Stage Nginx Config"
+        inputs:
+          sourceFolder: "$(Build.SourcesDirectory)/frontend/nginx"
+          contents: "default.conf"
+          targetFolder: "$(Build.ArtifactStagingDirectory)/frontendStage/nginx"
+      - task: ArchiveFiles@2
+        displayName: "Archive UI Build"
+        inputs:
+          rootFolderOrFile: "$(Build.ArtifactStagingDirectory)/frontendStage"
+          includeRootFolder: false
+          archiveType: "zip"
+          archiveFile: "$(Build.ArtifactStagingDirectory)/unifiFrontend.zip"
+          replaceExistingArchive: true
+      - task: PublishBuildArtifacts@1
+        displayName: "Publish UI Artifact"
+        inputs:
+          PathtoPublish: "$(Build.ArtifactStagingDirectory)/unifiFrontend.zip"
+          ArtifactName: "unifiFrontend"
+          publishLocation: "Container"
+
+    # Image names stay as the two separate Docker repos already in use
+    # (spyder007/unifi-ipmanager, spyder007/unifi-client) even though the
+    # source now lives in one git repo -- renaming published images is out
+    # of scope for this merge.
+    dockerImages:
+      - name: api
+        dockerImageName: spyder007/unifi-ipmanager
+        dockerFilePath: api/Dockerfile.simple
+        artifactName: unifiIpManagerApi
+        artifactZipName: Unifi.IpManager
+        imageTagVariableName: unifi_ipmanager
+      - name: frontend
+        dockerImageName: spyder007/unifi-client
+        dockerFilePath: frontend/Dockerfile
+        artifactName: unifiFrontend
+        artifactZipName: unifiFrontend
+        imageTagVariableName: unifi_frontend
+
+    helmCharts:
+      - name: unifi-ipmanager
+        chartPath: charts/unifi-ipmanager
+
+    # chart_publish runs in parallel with docker_publish (both depend only
+    # on Build) -- updateHelmConfig must explicitly wait on both, since the
+    # template's own default only waits on docker_publish.
+    updateHelmConfigDependsOn:
+      - docker_publish
+      - chart_publish
+
     ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
       updateHelmConfig: false
-      buildAndPublishDockerImage: false
+      buildAndPublishDockerImages: false
+      buildAndPublishHelmCharts: false
+      executeSonar: true
+      uiExecuteSonar: true
+    ${{ elseif eq(variables['Build.SourceBranchName'], 'main') }}:
+      updateHelmConfig: true
+      buildAndPublishDockerImages: true
+      buildAndPublishHelmCharts: true
+      executeSonar: true
+      uiExecuteSonar: true
     ${{ else }}:
       updateHelmConfig: true
-      buildAndPublishDockerImage: true
-    
+      buildAndPublishDockerImages: true
+      buildAndPublishHelmCharts: true
+      executeSonar: false
+      uiExecuteSonar: false
+
+    helmTagsCollection: 'unifi_ipmanager=$(build.buildnumber),unifi_frontend=$(build.buildnumber),unifi_ipmanager_chart_version=$(build.buildnumber)'
+
+    executeTests: true
+    testProjects: '**/*.Tests/*.csproj'
+
+    useSonarCloud: true
+    sonarCloudOrganization: spydersoft-mjg
     sonarEndpointName: sonarcloud-spydersoft
     sonarProjectKey: spyder007_unifi-ipmanager
     sonarProjectName: unifi-ipmanager
     sonarExtraProperties: |
       sonar.coverage.exclusions=**/Program.cs
-    executeTests: true
-    testProjects: '**/*.Tests/*.csproj'
-    useSonarCloud: true
-    sonarCloudOrganization: spydersoft-mjg
-
-    
