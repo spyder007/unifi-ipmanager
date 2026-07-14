@@ -5,8 +5,8 @@
     <File Path="nuget.config" />
     <File Path="README.md" />
   </Folder>
-  <Project Path="Unifi.IpManager\Unifi.IpManager.csproj" Type="C#" />
-  <Project Path="Unifi.IpManager.Tests\Unifi.IpManager.Tests.csproj" Type="C#" />
+  <Project Path="api\Unifi.IpManager\Unifi.IpManager.csproj" Type="C#" />
+  <Project Path="api\Unifi.IpManager.Tests\Unifi.IpManager.Tests.csproj" Type="C#" />
   <Properties Name="Visual Studio">
     <Property Name="OpenWith.PreferredEditorGuid" Value="{32CC8DDA-2D70-49B2-94CD-22D57349B778}" />
   </Properties>

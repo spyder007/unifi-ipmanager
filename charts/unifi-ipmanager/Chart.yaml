@@ -1,0 +1,14 @@
+apiVersion: v2
+name: unifi-ipmanager
+description: "Unifi IP Manager — API + web UI, published as one combined OCI chart"
+
+type: application
+
+version: 0.1.0
+
+appVersion: "0.0.0"
+
+dependencies:
+- name: common
+  version: 4.4.0
+  repository: https://bjw-s-labs.github.io/helm-charts

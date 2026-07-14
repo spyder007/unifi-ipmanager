@@ -1,0 +1,133 @@
+defaultPodOptions:
+  imagePullSecrets:
+    - name: cr-spydersoft-github
+
+controllers:
+  main:
+    enabled: false
+  api:
+    enabled: true
+    revisionHistoryLimit: 1
+    strategy: RollingUpdate
+    type: deployment
+    replicas: 1
+    containers:
+      main:
+        image:
+          repository: ghcr.io/spyder007/unifi-ipmanager
+          pullPolicy: IfNotPresent
+        probes:
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /livez
+                port: 8080
+              initialDelaySeconds: 0
+              periodSeconds: 10
+              timeoutSeconds: 1
+              failureThreshold: 3
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /readyz
+                port: 8080
+              initialDelaySeconds: 0
+              periodSeconds: 10
+              timeoutSeconds: 1
+              failureThreshold: 3
+  frontend:
+    enabled: true
+    type: deployment
+    strategy: RollingUpdate
+    revisionHistoryLimit: 1
+    containers:
+      main:
+        image:
+          repository: ghcr.io/spyder007/unifi-client
+          pullPolicy: IfNotPresent
+
+persistence:
+  config-js:
+    enabled: true
+    type: configMap
+    controller: frontend
+    identifier: config-js
+    globalMounts:
+      - path: /usr/share/nginx/html/config.js
+        subPath: config.js
+
+service:
+  main:
+    enabled: false
+  api:
+    enabled: true
+    controller: api
+    nameOverride: api
+    primary: true
+    type: ClusterIP
+    ports:
+      http:
+        port: 80
+        targetPort: 8080
+  frontend:
+    enabled: true
+    controller: frontend
+    nameOverride: frontend
+    primary: true
+    type: ClusterIP
+    ports:
+      http:
+        port: 80
+        targetPort: 8080
+
+route:
+  main:
+    enabled: false
+  api:
+    enabled: true
+    kind: HTTPRoute
+    parentRefs:
+      - name: main
+        namespace: envoy-gateway-system
+        group: gateway.networking.k8s.io
+        kind: Gateway
+    hostnames:
+      - api.mattgerega.net
+    rules:
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /unifi/ipmanager
+        filters:
+          - type: URLRewrite
+            urlRewrite:
+              path:
+                type: ReplacePrefixMatch
+                replacePrefixMatch: /
+        backendRefs:
+          - identifier: api
+            port: 80
+  frontend:
+    enabled: true
+    kind: HTTPRoute
+    parentRefs:
+      - name: main
+        namespace: envoy-gateway-system
+        group: gateway.networking.k8s.io
+        kind: Gateway
+    hostnames:
+      - uni.mattgerega.net
+    rules:
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /
+        backendRefs:
+          - identifier: frontend
+            port: 80
+
+env_name: dev

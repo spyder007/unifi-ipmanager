@@ -1,0 +1,9 @@
+.mainsite-alerts-container {
+  flex-direction: column;
+  position: fixed;
+  top: 40px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  width: 100%;
+  z-index: 9999;
+}
