@@ -1,6 +1,7 @@
 using Flurl;
 using Flurl.Http;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -77,7 +78,7 @@ public class UnifiClient(
             {
                 var responseBody = await e.GetResponseStringAsync();
                 Logger.LogError(e, "Error executing request: {Message}. Response body: {ResponseBody}", e.Message, responseBody);
-                result.MarkFailed(e);
+                result.MarkFailed(TryGetUnifiErrorMessage(responseBody) ?? e.Message);
             }
             catch (Exception e)
             {
@@ -139,7 +140,7 @@ public class UnifiClient(
             {
                 var responseBody = await e.GetResponseStringAsync();
                 Logger.LogError(e, "Error executing request: {Message}. Response body: {ResponseBody}", e.Message, responseBody);
-                result.MarkFailed(e);
+                result.MarkFailed(TryGetUnifiErrorMessage(responseBody) ?? e.Message);
             }
             catch (Exception e)
             {
@@ -190,6 +191,24 @@ public class UnifiClient(
             }
         }
         return true;
+    }
+
+    private static string TryGetUnifiErrorMessage(string responseBody)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody))
+        {
+            return null;
+        }
+
+        try
+        {
+            var errorResponse = JsonConvert.DeserializeObject<UniResponse<object>>(responseBody);
+            return errorResponse?.Meta?.Rc == UniMeta.ErrorResponse ? errorResponse.Meta.Msg : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     private string GetCsrfToken()

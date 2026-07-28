@@ -344,6 +344,77 @@ public class UnifiServiceTests
     }
 
     [Test]
+    public async Task ProvisionNewClient_RetriesOnFixedIpConflict()
+    {
+        // Arrange
+        var provisionRequest = new ProvisionRequest
+        {
+            Name = "ProvisionedClient",
+            HostName = "provisioned",
+            StaticIp = true,
+            SyncDns = true,
+            Network = "LAN"
+        };
+
+        var existingClients = new List<UniClient>
+        {
+            new() { Mac = "00:11:22:33:44:77" }
+        };
+
+        var networks = new List<UnifiNetwork>
+        {
+            new() { Id = "network1", Name = "LAN" }
+        };
+
+        var provisionedClient = new UniClient
+        {
+            Id = "provisioned1",
+            Name = "ProvisionedClient"
+        };
+
+        _unifiClientMock.SetupSequence(c => c.ExecuteRequest(
+            It.IsAny<Url>(),
+            It.IsAny<Func<IFlurlRequest, Task<UniResponse<List<UniClient>>>>>(),
+            false))
+            .ReturnsAsync(new ServiceResult<List<UniClient>> { Success = true, Data = existingClients });
+
+        _unifiClientMock.Setup(c => c.ExecuteRequest(
+            It.IsAny<Url>(),
+            It.IsAny<Func<IFlurlRequest, Task<UniResponse<List<UniDevice>>>>>(),
+            false))
+            .ReturnsAsync(new ServiceResult<List<UniDevice>> { Success = true, Data = new List<UniDevice>() });
+
+        _unifiClientMock.Setup(c => c.ExecuteRequest(
+            It.Is<Url>(u => u.ToString().Contains("networkconf")),
+            It.IsAny<Func<IFlurlRequest, Task<UniResponse<List<UnifiNetwork>>>>>(),
+            false))
+            .ReturnsAsync(new ServiceResult<List<UnifiNetwork>> { Success = true, Data = networks });
+
+        _unifiClientMock.SetupSequence(c => c.ExecuteRequest(
+            It.Is<Url>(u => u.ToString().Contains("user") && !u.QueryParams.Any()),
+            It.IsAny<Func<IFlurlRequest, Task<UniClient>>>(),
+            true))
+            .ReturnsAsync(new ServiceResult<UniClient> { Success = false, Errors = ["api.err.FixedIpAlreadyUsedByClient"] })
+            .ReturnsAsync(new ServiceResult<UniClient> { Success = true, Data = provisionedClient });
+
+        _ipServiceMock.SetupSequence(i => i.GetUnusedNetworkIpAddress(It.IsAny<UnifiNetwork>(), It.IsAny<List<string>>()))
+            .ReturnsAsync("192.168.1.100")
+            .ReturnsAsync("192.168.1.101");
+
+        // Act
+        var result = await _service.ProvisionNewClient(provisionRequest);
+
+        // Assert
+        Assert.That(result.Success, Is.True);
+        Assert.That(result.Data.Name, Is.EqualTo("ProvisionedClient"));
+        _ipServiceMock.Verify(i => i.GetUnusedNetworkIpAddress(It.IsAny<UnifiNetwork>(), It.IsAny<List<string>>()), Times.Exactly(2));
+        _unifiClientMock.Verify(c => c.ExecuteRequest(
+            It.Is<Url>(u => u.ToString().Contains("user") && !u.QueryParams.Any()),
+            It.IsAny<Func<IFlurlRequest, Task<UniClient>>>(),
+            true), Times.Exactly(2));
+    }
+
+    [Test]
     public async Task DeleteClient_Success()
     {
         // Arrange

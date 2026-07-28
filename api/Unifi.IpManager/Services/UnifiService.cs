@@ -32,6 +32,9 @@ public class UnifiService(
 
     private UnifiControllerOptions UnifiOptions { get; } = options.Value;
 
+    private const string FixedIpAlreadyUsedError = "api.err.FixedIpAlreadyUsedByClient";
+    private const int MaxProvisionIpAttempts = 5;
+
     #region IUnifiService Implementation
 
     public async Task<ServiceResult<List<UnifiNetwork>>> GetAllNetworks()
@@ -239,10 +242,32 @@ public class UnifiService(
             var network = await GetNetwork(request.Network);
             if (network != null)
             {
-                var assignedIp = await IpService.GetUnusedNetworkIpAddress(network, clients.Select(c => c.FixedIp).ToList());
-                if (!string.IsNullOrWhiteSpace(assignedIp))
+                var usedIps = clients.Select(c => c.FixedIp).ToList();
+
+                for (var attempt = 1; attempt <= MaxProvisionIpAttempts; attempt++)
                 {
+                    var assignedIp = await IpService.GetUnusedNetworkIpAddress(network, usedIps);
+                    if (string.IsNullOrWhiteSpace(assignedIp))
+                    {
+                        break;
+                    }
+
                     addRequest.FixedIp = assignedIp;
+                    var addResult = await ExecuteAddUniClientRequest(addRequest);
+
+                    var isFixedIpConflict = addResult.Errors.Exists(
+                        e => e.Contains(FixedIpAlreadyUsedError, StringComparison.OrdinalIgnoreCase));
+
+                    if (!isFixedIpConflict || attempt == MaxProvisionIpAttempts)
+                    {
+                        return addResult;
+                    }
+
+                    Logger.LogWarning(
+                        "UniFi rejected Fixed IP {FixedIp} for network {Network} as already in use by another client; requesting a new address (attempt {Attempt} of {MaxAttempts})",
+                        assignedIp, request.Network, attempt, MaxProvisionIpAttempts);
+
+                    usedIps.Add(assignedIp);
                 }
             }
         }
