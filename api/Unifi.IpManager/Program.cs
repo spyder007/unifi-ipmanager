@@ -94,6 +94,7 @@ _ = app
     .UseOpenApi()
     .UseAuthentication(authInstalled)
     .UseRouting()
+    .UseSerilogRequestLogging()
     .UseCors()
     .UseAuthorization(authInstalled);
 

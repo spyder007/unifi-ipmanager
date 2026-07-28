@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using Unifi.IpManager.Controllers;
@@ -13,15 +12,13 @@ namespace Unifi.IpManager.Tests.ControllerTests;
 public class DnsControllerTests
 {
     private Mock<IUnifiDnsService> _unifiDnsServiceMock = null!;
-    private Mock<ILogger<DnsController>> _loggerMock = null!;
     private DnsController _controller = null!;
 
     [SetUp]
     public void Setup()
     {
         _unifiDnsServiceMock = new Mock<IUnifiDnsService>();
-        _loggerMock = new Mock<ILogger<DnsController>>();
-        _controller = new DnsController(_unifiDnsServiceMock.Object, _loggerMock.Object);
+        _controller = new DnsController(_unifiDnsServiceMock.Object);
     }
 
     [Test]
@@ -245,92 +242,6 @@ public class DnsControllerTests
         Assert.That(result.Value?.Errors, Contains.Item("Delete failed"));
 
         _unifiDnsServiceMock.Verify(s => s.DeleteHostDnsRecord(recordId), Times.Once);
-    }
-
-    [Test]
-    public async Task Get_LogsTraceMessage()
-    {
-        // Arrange
-        _unifiDnsServiceMock.Setup(s => s.GetHostDnsRecords())
-            .ReturnsAsync(new ServiceResult<List<HostDnsRecord>> { Success = true, Data = new List<HostDnsRecord>() });
-
-        // Act
-        await _controller.Get();
-
-        // Assert
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Trace,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Processing request for all DNS records")),
-                It.IsAny<Exception?>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
-    }
-
-    [Test]
-    public async Task Post_LogsTraceMessage()
-    {
-        // Arrange
-        var hostRecord = new HostDnsRecord { Hostname = "test.com", IpAddress = "1.1.1.1", RecordType = "A" };
-        _unifiDnsServiceMock.Setup(s => s.CreateHostDnsRecord(It.IsAny<HostDnsRecord>()))
-            .ReturnsAsync(new ServiceResult<HostDnsRecord> { Success = true, Data = hostRecord });
-
-        // Act
-        await _controller.Post(hostRecord);
-
-        // Assert
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Trace,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Processing request for new Dns Record")),
-                It.IsAny<Exception?>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
-    }
-
-    [Test]
-    public async Task Put_LogsTraceMessage()
-    {
-        // Arrange
-        var hostRecord = new HostDnsRecord { Hostname = "test.com", IpAddress = "1.1.1.1", RecordType = "A" };
-        _unifiDnsServiceMock.Setup(s => s.UpdateDnsHostRecord(It.IsAny<HostDnsRecord>()))
-            .ReturnsAsync(new ServiceResult<HostDnsRecord> { Success = true, Data = hostRecord });
-
-        // Act
-        await _controller.Put("test123", hostRecord);
-
-        // Assert
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Trace,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Processing request for update dns record")),
-                It.IsAny<Exception?>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
-    }
-
-    [Test]
-    public async Task DeleteClient_LogsTraceMessage()
-    {
-        // Arrange
-        _unifiDnsServiceMock.Setup(s => s.DeleteHostDnsRecord(It.IsAny<string>()))
-            .ReturnsAsync(new ServiceResult { Success = true });
-
-        // Act
-        await _controller.DeleteClient("test123");
-
-        // Assert
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Trace,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Processing request for delete dns record")),
-                It.IsAny<Exception?>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
     }
 
     [Test]

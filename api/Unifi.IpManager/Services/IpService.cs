@@ -16,7 +16,7 @@ namespace Unifi.IpManager.Services;
 public class IpService(IOptions<IpOptions> options, ILogger<IpService> logger, IDistributedCache distributedCache) : IIpService
 {
     private IpOptions IpOptions { get; } = options.Value;
-    private ILogger Logger { get; } = logger;
+    private readonly ILogger<IpService> _logger = logger;
 
     private IDistributedCache Cache { get; } = distributedCache;
 
@@ -29,7 +29,7 @@ public class IpService(IOptions<IpOptions> options, ILogger<IpService> logger, I
 
         if (string.IsNullOrWhiteSpace(network.IpSubnet) || string.IsNullOrWhiteSpace(network.DhcpStartAddress))
         {
-            Logger.LogWarning("Network {NetworkName} is missing IpSubnet or DhcpStartAddress", network.Name);
+            _logger.LogWarning("Network {NetworkName} is missing IpSubnet or DhcpStartAddress", network.Name);
             return string.Empty;
         }
 
@@ -37,27 +37,27 @@ public class IpService(IOptions<IpOptions> options, ILogger<IpService> logger, I
         var subnetParts = network.IpSubnet.Split('/');
         if (subnetParts.Length != 2)
         {
-            Logger.LogWarning("Invalid subnet format for network {NetworkName}: {Subnet}", network.Name, network.IpSubnet);
+            _logger.LogWarning("Invalid subnet format for network {NetworkName}: {Subnet}", network.Name, network.IpSubnet);
             return string.Empty;
         }
 
         var baseIpAddress = subnetParts[0];
         if (!IPAddress.TryParse(baseIpAddress, out var parsedBaseIp))
         {
-            Logger.LogWarning("Invalid base IP address for network {NetworkName}: {BaseIp}", network.Name, baseIpAddress);
+            _logger.LogWarning("Invalid base IP address for network {NetworkName}: {BaseIp}", network.Name, baseIpAddress);
             return string.Empty;
         }
 
         if (!int.TryParse(subnetParts[1], out var prefixLength) || prefixLength < 0 || prefixLength > 32)
         {
-            Logger.LogWarning("Invalid subnet prefix length for network {NetworkName}: {Prefix}", network.Name, subnetParts[1]);
+            _logger.LogWarning("Invalid subnet prefix length for network {NetworkName}: {Prefix}", network.Name, subnetParts[1]);
             return string.Empty;
         }
 
         // Parse DHCP start address to determine the upper limit
         if (!IPAddress.TryParse(network.DhcpStartAddress, out var dhcpStartIp))
         {
-            Logger.LogWarning("Invalid DHCP start address for network {NetworkName}: {DhcpStart}", network.Name, network.DhcpStartAddress);
+            _logger.LogWarning("Invalid DHCP start address for network {NetworkName}: {DhcpStart}", network.Name, network.DhcpStartAddress);
             return string.Empty;
         }
 
@@ -104,7 +104,7 @@ public class IpService(IOptions<IpOptions> options, ILogger<IpService> logger, I
             }
         }
 
-        Logger.LogWarning("No open IPs found for network {NetworkName}", network.Name);
+        _logger.LogWarning("No open IPs found for network {NetworkName}", network.Name);
         return string.Empty;
     }
 
@@ -190,7 +190,7 @@ public class IpService(IOptions<IpOptions> options, ILogger<IpService> logger, I
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error caching returned IP address {IpAddress}", ipAddress);
+            _logger.LogError(ex, "Error caching returned IP address {IpAddress}", ipAddress);
         }
     }
 

@@ -19,11 +19,11 @@ public class ClusterDnsService(
 {
 
     private readonly IUnifiDnsService UnifiDnsService = unifiDnsService;
-    private readonly ILogger<ClusterDnsService> Logger = logger;
+    private readonly ILogger<ClusterDnsService> _logger = logger;
 
     public async Task<ServiceResult<ClusterDns>> CreateClusterDns(NewClusterRequest clusterDns)
     {
-        Logger.LogTrace("Processing request to create new ClusterDns Record");
+        _logger.LogTrace("Processing request to create new ClusterDns Record");
         try
         {
             var controlPlaneHost = $"cp-{clusterDns.Name}";
@@ -81,7 +81,7 @@ public class ClusterDnsService(
 
     public async Task<ServiceResult<ClusterDns>> GetClusterDns(string name, string zone)
     {
-        Logger.LogTrace("Processing request for all ClusterDns Records");
+        _logger.LogTrace("Processing request for all ClusterDns Records");
         try
         {
             var dnsRecords = await UnifiDnsService.GetHostDnsRecords();
@@ -141,7 +141,7 @@ public class ClusterDnsService(
 
     public async Task<ServiceResult<ClusterDns>> UpdateClusterDns(ClusterDns clusterDns)
     {
-        Logger.LogTrace("Processing request to update ClusterDns Record");
+        _logger.LogTrace("Processing request to update ClusterDns Record");
         try
         {
             var existingRecordResult = await GetClusterDns(clusterDns.Name, clusterDns.ZoneName);

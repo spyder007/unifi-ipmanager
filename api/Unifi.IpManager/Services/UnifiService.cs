@@ -28,7 +28,7 @@ public class UnifiService(
     ILogger<UnifiService> logger) : IUnifiService
 {
     private IIpService IpService { get; } = ipService;
-    private ILogger<UnifiService> Logger { get; } = logger;
+    private readonly ILogger<UnifiService> _logger = logger;
 
     private UnifiControllerOptions UnifiOptions { get; } = options.Value;
 
@@ -263,7 +263,7 @@ public class UnifiService(
                         return addResult;
                     }
 
-                    Logger.LogWarning(
+                    _logger.LogWarning(
                         "UniFi rejected Fixed IP {FixedIp} for network {Network} as already in use by another client; requesting a new address (attempt {Attempt} of {MaxAttempts})",
                         assignedIp, request.Network, attempt, MaxProvisionIpAttempts);
 
@@ -352,8 +352,8 @@ public class UnifiService(
 
     private async Task<ServiceResult<UniClient>> ExecuteAddUniClientRequest(UnifiRequests.AddUniClientRequest addRequest)
     {
-        Logger.LogInformation(
-            "Adding UniFi client Mac={Mac}, HostName={HostName}, NetworkId={NetworkId}, UseFixedIp={UseFixedIp}, FixedIp={FixedIp}",
+        _logger.LogInformation(
+            "Adding UniFi client for MAC {Mac} with hostname {HostName} on network {NetworkId} (UseFixedIp={UseFixedIp}, FixedIp={FixedIp})",
             addRequest.Mac, addRequest.HostName, addRequest.NetworkId, addRequest.UseFixedIp, addRequest.FixedIp);
 
         return await unifiClient.ExecuteRequest(

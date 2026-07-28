@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using Unifi.IpManager.Controllers;
@@ -27,14 +26,13 @@ namespace Unifi.IpManager.Tests.ControllerTests
         [Test]
         public void GetFixedClientsTest()
         {
-            var logMock = new Mock<ILogger<ClientController>>();
             var unifiMock = new Mock<IUnifiService>();
             unifiMock.Setup(service => service.GetAllFixedClients().Result).Returns(new ServiceResult<List<UniClient>>
             {
                 Success = true,
                 Data = new List<UniClient> { new() { Id = "test" } }
             });
-            var controller = new ClientController(unifiMock.Object, logMock.Object);
+            var controller = new ClientController(unifiMock.Object);
             var result = controller.Get().Result;
             Assert.Multiple(() =>
             {
@@ -47,7 +45,6 @@ namespace Unifi.IpManager.Tests.ControllerTests
         [Test]
         public void PostNewClientTest()
         {
-            var logMock = new Mock<ILogger<ClientController>>();
             var unifiMock = new Mock<IUnifiService>();
             var newRequest = new NewClientRequest
             {
@@ -64,7 +61,7 @@ namespace Unifi.IpManager.Tests.ControllerTests
                 Success = true,
                 Data = expectedClient
             });
-            var controller = new ClientController(unifiMock.Object, logMock.Object);
+            var controller = new ClientController(unifiMock.Object);
             var result = controller.Post(newRequest).Result;
             Assert.Multiple(() =>
             {
@@ -77,7 +74,6 @@ namespace Unifi.IpManager.Tests.ControllerTests
         [Test]
         public void PutEditClientTest()
         {
-            var logMock = new Mock<ILogger<ClientController>>();
             var unifiMock = new Mock<IUnifiService>();
             var mac = "00:11:22:33:44:55";
             var editRequest = new EditClientRequest { Name = "edited" };
@@ -85,7 +81,7 @@ namespace Unifi.IpManager.Tests.ControllerTests
             {
                 Success = true
             });
-            var controller = new ClientController(unifiMock.Object, logMock.Object);
+            var controller = new ClientController(unifiMock.Object);
             var result = controller.Put(mac, editRequest).Result;
             Assert.That(result.Value, Is.Not.Null);
             Assert.That(result.Value?.Success, Is.True);
@@ -94,14 +90,13 @@ namespace Unifi.IpManager.Tests.ControllerTests
         [Test]
         public void DeleteClientTest()
         {
-            var logMock = new Mock<ILogger<ClientController>>();
             var unifiMock = new Mock<IUnifiService>();
             var mac = "00:11:22:33:44:55";
             unifiMock.Setup(service => service.DeleteClient(mac).Result).Returns(new ServiceResult
             {
                 Success = true
             });
-            var controller = new ClientController(unifiMock.Object, logMock.Object);
+            var controller = new ClientController(unifiMock.Object);
             var result = controller.DeleteClient(mac).Result;
             Assert.That(result.Value, Is.Not.Null);
             Assert.That(result.Value?.Success, Is.True);
@@ -110,7 +105,6 @@ namespace Unifi.IpManager.Tests.ControllerTests
         [Test]
         public void ProvisionClientTest()
         {
-            var logMock = new Mock<ILogger<ClientController>>();
             var unifiMock = new Mock<IUnifiService>();
             var provisionRequest = new ProvisionRequest
             {
@@ -124,7 +118,7 @@ namespace Unifi.IpManager.Tests.ControllerTests
                 Success = true,
                 Data = expectedClient
             });
-            var controller = new ClientController(unifiMock.Object, logMock.Object);
+            var controller = new ClientController(unifiMock.Object);
             var result = controller.ProvisionClient(provisionRequest).Result;
             Assert.That(result.Value, Is.Not.Null);
             Assert.That(result.Value?.Success, Is.True);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Reflection;
 using Unifi.IpManager.Models;
@@ -19,15 +19,15 @@ namespace Unifi.IpManager.Controllers;
 /// <remarks>
 /// Initializes a new instance of the <see cref="InfoController"/> class.
 /// </remarks>
-/// <param name="log"></param>
+/// <param name="logger"></param>
 /// <param name="myOpts">The options.</param>
 [ApiVersion("1.0")]
 [Route("[controller]")]
 [Authorize()]
 [ApiController]
-public class InfoController(ILogger<InfoController> log, IOptions<UnifiControllerOptions> myOpts) : ControllerBase
+public class InfoController(ILogger<InfoController> logger, IOptions<UnifiControllerOptions> myOpts) : ControllerBase
 {
-    private ILogger<InfoController> Log { get; set; } = log;
+    private readonly ILogger<InfoController> _logger = logger;
     /// <summary>
     /// Gets or sets the UnifiControllerOptions options.
     /// </summary>
@@ -60,7 +60,7 @@ public class InfoController(ILogger<InfoController> log, IOptions<UnifiControlle
         }
         catch (Exception e)
         {
-            Log.LogError(e, "Error retrieving file version");
+            _logger.LogError(e, "Error retrieving file version");
             return "0.0.0.0";
         }
     }

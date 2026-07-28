@@ -24,7 +24,7 @@ public class UnifiClient(
     ILogger<UnifiClient> logger) : IUnifiClient
 {
     protected UnifiControllerOptions UnifiOptions { get; } = options.Value;
-    protected ILogger<UnifiClient> Logger { get; } = logger;
+    protected readonly ILogger<UnifiClient> _logger = logger;
 
     private CookieJar _cookieJar;
 
@@ -77,18 +77,18 @@ public class UnifiClient(
             catch (FlurlHttpException e)
             {
                 var responseBody = await e.GetResponseStringAsync();
-                Logger.LogError(e, "Error executing request: {Message}. Response body: {ResponseBody}", e.Message, responseBody);
+                _logger.LogError(e, "Error executing request: {Message}. Response body: {ResponseBody}", e.Message, responseBody);
                 result.MarkFailed(TryGetUnifiErrorMessage(responseBody) ?? e.Message);
             }
             catch (Exception e)
             {
-                Logger.LogError(e, "Error executing request: {Message}", e.Message);
+                _logger.LogError(e, "Error executing request: {Message}", e.Message);
                 result.MarkFailed(e);
             }
         }
         else
         {
-            Logger.LogDebug("CSRF Token is null");
+            _logger.LogDebug("CSRF Token is null");
             result.MarkFailed("No CSRF Token Present");
         }
         return result;
@@ -139,18 +139,18 @@ public class UnifiClient(
             catch (FlurlHttpException e)
             {
                 var responseBody = await e.GetResponseStringAsync();
-                Logger.LogError(e, "Error executing request: {Message}. Response body: {ResponseBody}", e.Message, responseBody);
+                _logger.LogError(e, "Error executing request: {Message}. Response body: {ResponseBody}", e.Message, responseBody);
                 result.MarkFailed(TryGetUnifiErrorMessage(responseBody) ?? e.Message);
             }
             catch (Exception e)
             {
-                Logger.LogError(e, "Error executing request: {Message}", e.Message);
+                _logger.LogError(e, "Error executing request: {Message}", e.Message);
                 result.MarkFailed(e);
             }
         }
         else
         {
-            Logger.LogDebug("CSRF Token is null");
+            _logger.LogDebug("CSRF Token is null");
             result.MarkFailed("No CSRF Token Present");
         }
         return result;
@@ -182,11 +182,11 @@ public class UnifiClient(
                 var errorResponse = await ex.GetResponseJsonAsync<UniResponse<List<string>>>();
                 if (errorResponse.Meta.Rc == UniMeta.ErrorResponse)
                 {
-                    Logger.LogError("Error logging on to {Url}: {Message}", UnifiOptions.Url, errorResponse.Meta.Msg);
+                    _logger.LogError("Error logging on to {Url}: {Message}", UnifiOptions.Url, errorResponse.Meta.Msg);
                     return false;
                 }
-                Logger.LogDebug("Error Logging in: URL - {Url}, UserName - {UserName}, {Password}", UnifiOptions.Url, UnifiOptions.Username, UnifiOptions.Password);
-                Logger.LogError(ex, "Error logging in to Unifi Controller");
+                _logger.LogDebug("Error logging in: URL - {Url}, UserName - {UserName}", UnifiOptions.Url, UnifiOptions.Username);
+                _logger.LogError(ex, "Error logging in to Unifi Controller");
                 return false;
             }
         }
