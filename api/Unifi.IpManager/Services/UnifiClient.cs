@@ -73,6 +73,12 @@ public class UnifiClient(
                     result.MarkSuccessful(data.Data);
                 }
             }
+            catch (FlurlHttpException e)
+            {
+                var responseBody = await e.GetResponseStringAsync();
+                Logger.LogError(e, "Error executing request: {Message}. Response body: {ResponseBody}", e.Message, responseBody);
+                result.MarkFailed(e);
+            }
             catch (Exception e)
             {
                 Logger.LogError(e, "Error executing request: {Message}", e.Message);
@@ -128,6 +134,12 @@ public class UnifiClient(
                 }
 
                 result.MarkSuccessful(data);
+            }
+            catch (FlurlHttpException e)
+            {
+                var responseBody = await e.GetResponseStringAsync();
+                Logger.LogError(e, "Error executing request: {Message}. Response body: {ResponseBody}", e.Message, responseBody);
+                result.MarkFailed(e);
             }
             catch (Exception e)
             {

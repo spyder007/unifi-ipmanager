@@ -358,7 +358,11 @@ public class UnifiService(
             });
         var result = new ServiceResult<UniClient>();
 
-        if (data.Data.Count == 0)
+        if (!data.Success)
+        {
+            result.MarkFailed(data.Errors);
+        }
+        else if (data.Data.Count == 0)
         {
             result.MarkFailed("Client not found.");
         }
