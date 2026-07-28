@@ -1,4 +1,6 @@
-﻿using Asp.Versioning;
+﻿using System;
+
+using Asp.Versioning;
 using Flurl.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -8,13 +10,19 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using Spydersoft.Platform.Hosting.Options;
 using Spydersoft.Platform.Hosting.StartupExtensions;
+using Spydersoft.Platform.Hosting.Telemetry;
 using Unifi.IpManager.Options;
 using Unifi.IpManager.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 AppHealthCheckOptions healthCheckOptions = new();
-builder.AddSpydersoftTelemetry(typeof(Program).Assembly)
+builder.AddSpydersoftTelemetry(typeof(Program).Assembly,
+    new ConfigurationFunctions
+    {
+        // Kubernetes probes hit these every few seconds; they add nothing but noise to traces.
+        AspNetFilterFunction = context => !IsHealthCheckPath(context.Request.Path.Value)
+    })
         .AddSpydersoftSerilog(true);
 healthCheckOptions = builder.AddSpydersoftHealthChecks();
 
@@ -94,10 +102,14 @@ _ = app
     .UseOpenApi()
     .UseAuthentication(authInstalled)
     .UseRouting()
-    .UseSerilogRequestLogging()
+    .UseSpydersoftRequestLogging()
     .UseCors()
     .UseAuthorization(authInstalled);
 
 _ = app.MapControllers();
 
 await app.RunAsync();
+
+static bool IsHealthCheckPath(string path) =>
+    string.Equals(path, "/livez", StringComparison.OrdinalIgnoreCase) ||
+    string.Equals(path, "/readyz", StringComparison.OrdinalIgnoreCase);
