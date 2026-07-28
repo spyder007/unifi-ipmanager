@@ -24,9 +24,11 @@ namespace Unifi.IpManager.Services;
 public class UnifiService(
     IOptions<UnifiControllerOptions> options,
     IIpService ipService,
-    IUnifiClient unifiClient) : IUnifiService
+    IUnifiClient unifiClient,
+    ILogger<UnifiService> logger) : IUnifiService
 {
     private IIpService IpService { get; } = ipService;
+    private ILogger<UnifiService> Logger { get; } = logger;
 
     private UnifiControllerOptions UnifiOptions { get; } = options.Value;
 
@@ -325,6 +327,10 @@ public class UnifiService(
 
     private async Task<ServiceResult<UniClient>> ExecuteAddUniClientRequest(UnifiRequests.AddUniClientRequest addRequest)
     {
+        Logger.LogInformation(
+            "Adding UniFi client Mac={Mac}, HostName={HostName}, NetworkId={NetworkId}, UseFixedIp={UseFixedIp}, FixedIp={FixedIp}",
+            addRequest.Mac, addRequest.HostName, addRequest.NetworkId, addRequest.UseFixedIp, addRequest.FixedIp);
+
         return await unifiClient.ExecuteRequest(
                     unifiClient.BaseApiUrlV1.AppendPathSegments(unifiClient.SiteId, "rest", "user"),
                     async (request) =>

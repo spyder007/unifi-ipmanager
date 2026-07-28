@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Flurl;
 using Flurl.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
@@ -44,7 +45,7 @@ public class UnifiServiceTests
         _unifiClientMock.Setup(c => c.BaseApiUrlV1).Returns(_baseApiUrlV1);
         _unifiClientMock.Setup(c => c.SiteId).Returns(_siteId);
 
-        _service = new UnifiService(_options, _ipServiceMock.Object, _unifiClientMock.Object);
+        _service = new UnifiService(_options, _ipServiceMock.Object, _unifiClientMock.Object, Mock.Of<ILogger<UnifiService>>());
     }
 
     [Test]
