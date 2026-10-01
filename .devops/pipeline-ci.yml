@@ -159,6 +159,7 @@ extends:
     helmTagsCollection: 'unifi_ipmanager=$(build.buildnumber),unifi_frontend=$(build.buildnumber),unifi_ipmanager_chart_version=$(build.buildnumber)'
 
     executeTests: true
+    testRunner: mtp
     testProjects: '**/*.Tests/*.csproj'
 
     useSonarCloud: true
